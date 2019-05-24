@@ -17,9 +17,27 @@ impl Heuristique {
     }
 
     fn process_Manhattan(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
-        let g: Vec<Vec<i64>> = grid.clone();
-        println!("GRID : {:?}", g);
-        0.0
+        let res: f64 = grid
+            .iter()
+            .enumerate()
+            .map(|(y, line)| {
+                line.iter().enumerate().fold(0f64, |acc, (x, col)| {
+                    let g = goal
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, l)| l.iter().any(|c| c == col))
+                        .fold((0f64, 0f64), |_, (g_y, l)| {
+                            (
+                                g_y as f64,
+                                l.iter().enumerate().find(|c| c.1 == col).unwrap().0 as f64,
+                            )
+                        });
+                    acc + (g.0 - y as f64).abs() + (g.1 - x as f64).abs()
+                })
+            })
+            .sum();
+        println!("HEURISTIQUE RES : {:?}", res);
+        res
     }
 }
 
@@ -105,8 +123,11 @@ impl NPuzzle {
         {
             return Err(Box::new(PuzzleError::BadSize));
         }
-        println!("{:?}", initial);
+        println!("INITIAL : {:?}", initial);
         let goal = NPuzzle::generate_goal(&size, &initial);
+        println!("GOAL : {:?}", goal);
+        let h = heuristique.process_h(&initial, &goal);
+        println!("Heauristique : {:?}", h);
         Ok(NPuzzle {
             size,
             goal: goal.clone(),
@@ -126,47 +147,57 @@ impl NPuzzle {
         let mut col_begin = 0;
         let mut col_end = *size - 1;
 
+        println!("SORTED : {:?}", map);
         while row_begin <= row_end && col_begin <= col_end {
-            // println!("#1");
+            println!("#1");
             for i in col_begin..=col_end {
-                // println!("{} {}", row_begin, i);
+                println!(
+                    "{} {} : {}",
+                    row_begin,
+                    i,
+                    map[(row_begin * size + i) as usize]
+                );
                 goal.push(map[(row_begin * size + i) as usize]);
             }
             row_begin += 1;
 
-            // println!("#2");
+            println!("#2");
             for i in row_begin..=row_end {
-                // println!("{} {}", i, col_end);
+                println!("{} {} : {}", i, col_end, map[(i * size + col_end) as usize]);
                 goal.push(map[(i * size + col_end) as usize]);
             }
             col_end -= 1;
 
-            // println!("#3");
+            println!("#3");
             if row_begin <= row_end {
                 for i in (col_begin..=col_end).rev() {
-                    // println!("{} {}", row_end, i);
+                    println!("{} {} : {}", row_end, i, map[(row_end * size + i) as usize]);
                     goal.push(map[(row_end * size + i) as usize]);
                 }
             }
             row_end -= 1;
 
-            // println!("#4");
+            println!("#4");
             if col_begin <= col_end {
                 for i in (row_begin..=row_end).rev() {
-                    // println!("{} {}", i, col_begin);
+                    println!(
+                        "{} {} : {}",
+                        i,
+                        col_begin,
+                        map[(i * size + col_begin) as usize]
+                    );
                     goal.push(map[(i * size + col_begin) as usize]);
                 }
             }
             col_begin += 1;
         }
-        println!("SORTED : {:?}", map);
         println!("GOAL : {:?}", goal);
 
         let mut res: Vec<Vec<i64>> = vec![vec![0; *size as usize]; *size as usize];
         for (i, s) in goal.iter().enumerate() {
             res[i / *size as usize][i % *size as usize] = *s;
         }
-        println!("RES : {:?}", res);
+        // println!("RES : {:?}", res);
         res
     }
 
