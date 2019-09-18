@@ -3,88 +3,11 @@ use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Debug, Clone)]
-pub enum Heuristique {
-    Manhattan,
-    Hamming,
-}
+pub mod heuristique;
+pub mod node;
 
-impl Heuristique {
-    fn process_h(&self, grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
-        match &self {
-            Heuristique::Manhattan => Heuristique::process_Manhattan(grid, goal),
-            _ => 0.0,
-        }
-    }
-
-    fn process_Manhattan(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
-        let res: f64 = grid
-            .iter()
-            .enumerate()
-            .map(|(y, line)| {
-                line.iter()
-                    .enumerate()
-                    .filter(|(_, col)| **col != 0)
-                    .fold(0f64, |acc, (x, col)| {
-                        let g = goal
-                            .iter()
-                            .enumerate()
-                            .filter(|(_, l)| l.iter().any(|c| c == col))
-                            .fold((0f64, 0f64), |_, (g_y, l)| {
-                                (
-                                    g_y as f64,
-                                    l.iter().enumerate().find(|c| c.1 == col).unwrap().0 as f64,
-                                )
-                            });
-                        acc + (g.0 - y as f64).abs() + (g.1 - x as f64).abs()
-                    })
-            })
-            .sum();
-        // println!("HEURISTIQUE RES : {:?}", res);
-        res
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Node {
-    grid: Vec<Vec<i64>>,
-    g: f64,
-    h: f64,
-    parent: Option<Rc<Node>>,
-}
-
-impl Node {
-    fn new(
-        grid: Vec<Vec<i64>>,
-        parent: Option<Rc<Node>>,
-        goal: &Vec<Vec<i64>>,
-        heuristique: &Heuristique,
-    ) -> Node {
-        let g = parent.clone();
-        let g = match g {
-            Some(n) => n.g + 1.0,
-            None => 0.0,
-        };
-        let h = heuristique.process_h(&grid, goal);
-        Node { grid, h, g, parent }
-    }
-
-    fn get_f(&self) -> f64 {
-        return self.g + self.h;
-    }
-}
-
-impl PartialEq for Node {
-    fn eq(&self, other: &Node) -> bool {
-        return self.get_f() == other.get_f();
-    }
-}
-
-impl PartialOrd for Node {
-    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
-        self.get_f().partial_cmp(&other.get_f())
-    }
-}
+use node::*;
+use heuristique::*;
 
 #[derive(Debug)]
 pub enum PuzzleError {
@@ -109,7 +32,7 @@ pub struct NPuzzle {
     pub size: i64,
     pub goal: Vec<Vec<i64>>,
     pub heuristique: Heuristique,
-    pub open_list: Vec<Node>,
+    pub open_list: Vec<Rc<Node>>,
     pub close_list: Vec<Rc<Node>>,
 }
 
@@ -121,7 +44,6 @@ impl NPuzzle {
             .filter(|x| !x.is_empty())
             .map(|x| {
                 x.split_whitespace()
-                    // .map(|x| if x == "0" { "9223372036854775807" } else { x })
                     .map(|x| x.parse::<i64>())
                     .collect()
             })
@@ -143,12 +65,12 @@ impl NPuzzle {
         let goal = NPuzzle::generate_goal(&size, &initial);
         println!("GOAL : {:?}", goal);
         let h = heuristique.process_h(&initial, &goal);
-        println!("Heauristique : {:?}", h);
+        println!("Heuristique : {:?}", h);
         Ok(NPuzzle {
             size,
             goal: goal.clone(),
             heuristique: heuristique.clone(),
-            open_list: vec![Node::new(initial, None, &goal, &heuristique)],
+            open_list: vec![Rc::new(Node::new(initial, None, &goal, &heuristique))],
             close_list: Vec::new(),
         })
     }
@@ -220,8 +142,9 @@ impl NPuzzle {
             }
 
             println!("OPEN LIST : {:?}", self.open_list);
-            println!("CURRENT : {:?}", current);
+            println!("CURRENT : {}", current);
 
+            // empty space position "0"
             let pos = current
                 .grid
                 .iter()
@@ -233,23 +156,24 @@ impl NPuzzle {
                         acc
                     }
                 });
-            println!("POS: {:?}", pos);
+            // println!("POS: {:?}", pos);
 
-            let mut swaps: Vec<Node> = vec![];
+            let mut swaps: Vec<Rc<Node>> = vec![];
             let current_grid = current.grid.clone();
             let goal = self.goal.clone();
-            let parent = Rc::new(current);
+            let parent = current;
+
             if pos.0 as i32 > 0 {
                 println!("TOP SWAP !");
                 let mut top = current_grid.clone();
                 top[pos.0][pos.1] = top[pos.0 - 1][pos.1];
                 top[pos.0 - 1][pos.1] = 0;
-                swaps.push(Node::new(
+                swaps.push(Rc::new(Node::new(
                     top,
                     Some(parent.clone()),
                     &goal,
                     &self.heuristique,
-                ));
+                )));
             }
 
             if pos.1 + 1 < self.size as usize {
@@ -257,12 +181,12 @@ impl NPuzzle {
                 let mut right = current_grid.clone();
                 right[pos.0][pos.1] = right[pos.0][pos.1 + 1];
                 right[pos.0][pos.1 + 1] = 0;
-                swaps.push(Node::new(
+                swaps.push(Rc::new(Node::new(
                     right,
                     Some(parent.clone()),
                     &goal,
                     &self.heuristique,
-                ));
+                )));
             }
 
             if pos.0 + 1 < self.size as usize {
@@ -270,12 +194,12 @@ impl NPuzzle {
                 let mut bottom = current_grid.clone();
                 bottom[pos.0][pos.1] = bottom[pos.0 + 1][pos.1];
                 bottom[pos.0 + 1][pos.1] = 0;
-                swaps.push(Node::new(
+                swaps.push(Rc::new(Node::new(
                     bottom,
                     Some(parent.clone()),
                     &goal,
                     &self.heuristique,
-                ));
+                )));
             }
 
             if pos.1 as i32 > 0 {
@@ -283,15 +207,13 @@ impl NPuzzle {
                 let mut left = current_grid.clone();
                 left[pos.0][pos.1] = left[pos.0][pos.1 - 1];
                 left[pos.0][pos.1 - 1] = 0;
-                swaps.push(Node::new(
+                swaps.push(Rc::new(Node::new(
                     left,
                     Some(parent.clone()),
                     &goal,
                     &self.heuristique,
-                ));
+                )));
             }
-
-            // println!("SWAPS | {} : {:?}", swaps.len(), swaps);
 
             self.close_list.push(parent);
             self.open_list.extend(swaps);
@@ -299,7 +221,16 @@ impl NPuzzle {
             // println!("NPUZZLE : {:?}", self);
         };
 
-        println!("RESOLVED : {:?}", solved);
+        // Display of the solved puzzle
+        let mut cur: &Option<Rc<Node>> = &Some(solved);
+        println!("RESOLVED :");
+        while cur.is_some() {
+            let _ = cur.as_ref().map(|node| {
+                println!("{}", node);
+                cur = &node.parent;
+            });
+        }
+        println!("NODE Explored : {}", i);
     }
 }
 
