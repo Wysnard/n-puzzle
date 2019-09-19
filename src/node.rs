@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
-use std::rc::Rc;
 use std::fmt;
+use std::rc::Rc;
 
 use super::heuristique::*;
 
@@ -35,9 +35,26 @@ impl Node {
     }
 }
 
+/*
+ * Warning: Order for Node is reverse to make the binary heap a min-heap
+*/
+
+impl Eq for Node {}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let ord = self.get_f().partial_cmp(&other.get_f()).unwrap();
+        match ord {
+            Ordering::Greater => Ordering::Less,
+            Ordering::Less => Ordering::Greater,
+            Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
+        }
+    }
+}
+
 impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
-        return self.h == other.h && self.g == self.g;
+        return self.grid == other.grid && self.g == other.g;
     }
 }
 
@@ -46,21 +63,26 @@ impl PartialOrd for Node {
         let ord = self.get_f().partial_cmp(&other.get_f());
 
         match ord {
-            Some(v) => {
-                Some(match v {
-                    Ordering::Greater => Ordering::Greater,
-                    Ordering::Less => Ordering::Less,
-                    Ordering::Equal => self.g.partial_cmp(&other.g).unwrap().reverse(),
-                })
-            },
-            _ => None
+            Some(v) => Some(match v {
+                Ordering::Greater => Ordering::Less,
+                Ordering::Less => Ordering::Greater,
+                Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
+            }),
+            _ => None,
         }
     }
 }
 
 impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "|grid: {:?} ~ f: {} = h: {} + g: {}|", self.grid, self.h + self.g, self.h, self.g)
+        write!(
+            f,
+            "|grid: {:?} ~ f: {} = h: {} + g: {}|",
+            self.grid,
+            self.h + self.g,
+            self.h,
+            self.g
+        )
     }
 }
 
@@ -68,4 +90,33 @@ impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_Node_equality() {
+        let mut first = Node {
+            grid: vec![vec![0; 3]; 3],
+            g: 5.0f64,
+            h: 5.0f64,
+            parent: None,
+        };
+        let mut second = first.clone();
+        assert_eq!(true, first == second);
+    }
+    #[test]
+    fn test_Node_inequality() {
+        let mut first = Node {
+            grid: vec![vec![0; 3]; 3],
+            g: 5.0f64,
+            h: 5.0f64,
+            parent: None,
+        };
+        let mut second = first.clone();
+        second.g = 3.0f64;
+        assert_eq!(false, first == second);
+    }
+
 }

@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
@@ -6,8 +6,8 @@ use std::rc::Rc;
 pub mod heuristique;
 pub mod node;
 
-use node::*;
 use heuristique::*;
+use node::*;
 
 #[derive(Debug)]
 pub enum PuzzleError {
@@ -32,7 +32,7 @@ pub struct NPuzzle {
     pub size: i64,
     pub goal: Vec<Vec<i64>>,
     pub heuristique: Heuristique,
-    pub open_list: Vec<Rc<Node>>,
+    pub open_list: BinaryHeap<Rc<Node>>,
     pub close_list: Vec<Rc<Node>>,
 }
 
@@ -42,11 +42,7 @@ impl NPuzzle {
             .lines()
             .map(|x| x.split('#').next().unwrap().trim())
             .filter(|x| !x.is_empty())
-            .map(|x| {
-                x.split_whitespace()
-                    .map(|x| x.parse::<i64>())
-                    .collect()
-            })
+            .map(|x| x.split_whitespace().map(|x| x.parse::<i64>()).collect())
             .collect();
         let mut initial = initial?;
         let mut size = initial.remove(0);
@@ -66,11 +62,13 @@ impl NPuzzle {
         println!("GOAL : {:?}", goal);
         let h = heuristique.process_h(&initial, &goal);
         println!("Heuristique : {:?}", h);
+        let mut open_list: BinaryHeap<Rc<Node>> = BinaryHeap::new();
+        open_list.push(Rc::new(Node::new(initial, None, &goal, &heuristique)));
         Ok(NPuzzle {
             size,
             goal: goal.clone(),
             heuristique: heuristique.clone(),
-            open_list: vec![Rc::new(Node::new(initial, None, &goal, &heuristique))],
+            open_list,
             close_list: Vec::new(),
         })
     }
@@ -132,17 +130,17 @@ impl NPuzzle {
 
     pub fn run(&mut self) {
         println!("RUN !");
-        let mut i = 0;
+        let mut epochs = 0;
         let solved = loop {
-            i += 1;
-            let current = self.open_list.remove(0);
+            epochs += 1;
+            let current = self.open_list.pop().unwrap();
 
             if current.h == 0.0 {
                 break current;
             }
 
-            println!("OPEN LIST : {:?}", self.open_list);
-            println!("CURRENT : {}", current);
+            // println!("OPEN LIST : {:?}", self.open_list);
+            println!("CURRENT : {:?}", current);
 
             // empty space position "0"
             let pos = current
@@ -164,7 +162,7 @@ impl NPuzzle {
             let parent = current;
 
             if pos.0 as i32 > 0 {
-                println!("TOP SWAP !");
+                // println!("TOP SWAP !");
                 let mut top = current_grid.clone();
                 top[pos.0][pos.1] = top[pos.0 - 1][pos.1];
                 top[pos.0 - 1][pos.1] = 0;
@@ -177,7 +175,7 @@ impl NPuzzle {
             }
 
             if pos.1 + 1 < self.size as usize {
-                println!("RIGHT SWAP !");
+                // println!("RIGHT SWAP !");
                 let mut right = current_grid.clone();
                 right[pos.0][pos.1] = right[pos.0][pos.1 + 1];
                 right[pos.0][pos.1 + 1] = 0;
@@ -190,7 +188,7 @@ impl NPuzzle {
             }
 
             if pos.0 + 1 < self.size as usize {
-                println!("BOTTOM SWAP !");
+                // println!("BOTTOM SWAP !");
                 let mut bottom = current_grid.clone();
                 bottom[pos.0][pos.1] = bottom[pos.0 + 1][pos.1];
                 bottom[pos.0 + 1][pos.1] = 0;
@@ -203,7 +201,7 @@ impl NPuzzle {
             }
 
             if pos.1 as i32 > 0 {
-                println!("LEFT SWAP !");
+                // println!("LEFT SWAP !");
                 let mut left = current_grid.clone();
                 left[pos.0][pos.1] = left[pos.0][pos.1 - 1];
                 left[pos.0][pos.1 - 1] = 0;
@@ -217,7 +215,6 @@ impl NPuzzle {
 
             self.close_list.push(parent);
             self.open_list.extend(swaps);
-            self.open_list.sort_by(|a, b| a.partial_cmp(b).unwrap());
             // println!("NPUZZLE : {:?}", self);
         };
 
@@ -230,7 +227,7 @@ impl NPuzzle {
                 cur = &node.parent;
             });
         }
-        println!("NODE Explored : {}", i);
+        println!("EPOCHS : {}", epochs);
     }
 }
 

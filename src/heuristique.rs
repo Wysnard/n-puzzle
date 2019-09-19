@@ -1,18 +1,31 @@
 #[derive(Debug, Clone)]
 pub enum Heuristique {
-    Manhattan,
     Hamming,
+    Manhattan,
 }
 
 impl Heuristique {
     pub fn process_h(&self, grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
         match &self {
-            Heuristique::Manhattan => Heuristique::process_Manhattan(grid, goal),
+            Heuristique::Hamming => Heuristique::process_hamming(grid, goal),
+            Heuristique::Manhattan => Heuristique::process_manhattan(grid, goal),
             _ => 0.0,
         }
     }
 
-    pub fn process_Manhattan(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
+    pub fn process_hamming(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
+        let mut res = 0.0f64;
+        for y in 0..grid.len() {
+            for x in 0..grid.len() {
+                if grid[y][x] != goal[y][x] {
+                    res += 1.0f64;
+                }
+            }
+        }
+        res
+    }
+
+    pub fn process_manhattan(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
         let res: f64 = grid
             .iter()
             .enumerate()
