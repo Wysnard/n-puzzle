@@ -31,7 +31,7 @@ impl Node {
     }
 
     pub fn get_f(&self) -> f64 {
-        return self.g + self.h;
+        self.g + self.h
     }
 }
 
@@ -77,11 +77,21 @@ impl fmt::Display for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "|grid: {:?} ~ f: {} = h: {} + g: {}|",
-            self.grid,
+            "f: {} = h: {} + g: {}
+{}
+",
             self.h + self.g,
             self.h,
-            self.g
+            self.g,
+            self.grid
+                .iter()
+                .map(|x| x
+                    .iter()
+                    .map(|&y| y.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" "))
+                .collect::<Vec<String>>()
+                .join("\n"),
         )
     }
 }

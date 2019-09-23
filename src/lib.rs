@@ -51,13 +51,16 @@ impl NPuzzle {
         })
     }
 
+    /*
+     * Main loop which runs the algorithm
+     */
     pub fn run(&mut self) {
         println!("RUN !");
         let mut epochs: u64 = 0;
         let solved = loop {
             epochs += 1;
             if epochs > self.max_iteration {
-                println!("Max iterations has been reached. We consider this puzzle unsolvable.");
+                println!("Max iterations has been reached. We consider this puzzle as unsolvable.");
                 process::exit(1);
             }
             let current = self.open_list.pop().unwrap();
@@ -67,9 +70,9 @@ impl NPuzzle {
             }
 
             // println!("OPEN LIST : {:?}", self.open_list);
-            println!("CURRENT : {:?}", current);
+            // println!("CURRENT : {:?}", current);
 
-            // empty space position "0"
+            // Empty Space position
             let pos = current
                 .grid
                 .iter()

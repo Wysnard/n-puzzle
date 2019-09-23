@@ -32,6 +32,9 @@ impl Heuristique {
         let mut res = 0.0f64;
         for y in 0..grid.len() {
             for x in 0..grid.len() {
+                if grid[y][x] == 0 {
+                    continue;
+                }
                 if grid[y][x] != goal[y][x] {
                     res += 1.0f64;
                 }
