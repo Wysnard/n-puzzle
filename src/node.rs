@@ -18,7 +18,7 @@ impl Node {
     pub fn new(
         grid: Vec<Vec<i64>>,
         parent: Link,
-        goal: &Vec<Vec<i64>>,
+        goal: &[Vec<i64>],
         heuristique: &Heuristique,
     ) -> Node {
         let g = parent.clone();
@@ -54,7 +54,7 @@ impl Ord for Node {
 
 impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
-        return self.grid == other.grid && self.g == other.g;
+        self.grid == other.grid && self.g == other.g
     }
 }
 

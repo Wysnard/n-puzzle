@@ -1,31 +1,17 @@
 use std::collections::BinaryHeap;
 use std::error::Error;
-use std::fmt;
+use std::process;
 use std::rc::Rc;
 
+pub mod file;
+pub mod goal;
 pub mod heuristique;
 pub mod node;
 
+use file::*;
+use goal::*;
 use heuristique::*;
 use node::*;
-
-#[derive(Debug)]
-pub enum PuzzleError {
-    EmptyMap,
-    BadSize,
-}
-
-impl fmt::Display for PuzzleError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            PuzzleError::EmptyMap => write!(f, "It seems that the input file is empty"),
-            PuzzleError::BadSize => write!(f, "Map size is incorrect."),
-            _ => write!(f, "Format Error."),
-        }
-    }
-}
-
-impl Error for PuzzleError {}
 
 #[derive(Debug)]
 pub struct NPuzzle {
@@ -34,31 +20,21 @@ pub struct NPuzzle {
     pub heuristique: Heuristique,
     pub open_list: BinaryHeap<Rc<Node>>,
     pub close_list: Vec<Rc<Node>>,
+    pub max_state: usize,
+    pub max_iteration: u64,
 }
 
 impl NPuzzle {
-    pub fn new(mut arg: String, heuristique: Heuristique) -> Result<NPuzzle, Box<dyn Error>> {
-        let initial: Result<Vec<Vec<i64>>, _> = arg
-            .lines()
-            .map(|x| x.split('#').next().unwrap().trim())
-            .filter(|x| !x.is_empty())
-            .map(|x| x.split_whitespace().map(|x| x.parse::<i64>()).collect())
-            .collect();
-        let mut initial = initial?;
-        let mut size = initial.remove(0);
-        if size.len() > 1 {
-            return Err(Box::new(PuzzleError::BadSize));
-        }
-        let size = size.remove(0);
+    pub fn new(
+        arg: String,
+        heuristique: Heuristique,
+        goal: Goal,
+        max_iteration: u64,
+    ) -> Result<NPuzzle, Box<dyn Error>> {
+        let (size, initial) = parse_file(arg)?;
         println!("SIZE : {:?}", size);
-        if size <= 0
-            || size != initial.len() as i64
-            || size != initial.iter().map(|x| x.len()).max().unwrap() as i64
-        {
-            return Err(Box::new(PuzzleError::BadSize));
-        }
         println!("INITIAL : {:?}", initial);
-        let goal = NPuzzle::generate_goal(&size, &initial);
+        let goal = goal.generate(&size, &initial);
         println!("GOAL : {:?}", goal);
         let h = heuristique.process_h(&initial, &goal);
         println!("Heuristique : {:?}", h);
@@ -70,69 +46,20 @@ impl NPuzzle {
             heuristique: heuristique.clone(),
             open_list,
             close_list: Vec::new(),
+            max_state: 0,
+            max_iteration,
         })
-    }
-
-    pub fn generate_goal(size: &i64, map: &Vec<Vec<i64>>) -> Vec<Vec<i64>> {
-        let mut map: Vec<i64> = map
-            .clone()
-            .into_iter()
-            .flatten()
-            .map(|x| if x == 0 { 9223372036854775807 } else { x })
-            .collect();
-        map.sort();
-
-        let mut map = map
-            .iter()
-            .map(|x| if x == &9223372036854775807 { &0 } else { x });
-
-        let mut A: Vec<Vec<i64>> = vec![vec![0; *size as usize]; *size as usize];
-        let n = *size;
-        let mut len = *size;
-        let mut k = 0;
-        let mut p = 0;
-
-        while k < n * n {
-            // println!("#1");
-            for i in p..len {
-                // println!("{} {}", p, i);
-                A[p as usize][i as usize] = *map.next().unwrap();
-                k += 1;
-            }
-
-            // println!("#2");
-            for i in p + 1..len {
-                A[i as usize][(len - 1) as usize] = *map.next().unwrap();
-                // println!("{} {} : {}", i, len, A[i as usize][(len - 1) as usize]);
-                k += 1;
-            }
-
-            // println!("#3");
-            for i in (p..len - 1).rev() {
-                A[(len - 1) as usize][i as usize] = *map.next().unwrap();
-                // println!("{} {} : {}", len - 1, i, A[(len - 1) as usize][i as usize]);
-                k += 1
-            }
-
-            // println!("#4");
-            for i in (p + 1..len - 1).rev() {
-                A[i as usize][p as usize] = *map.next().unwrap();
-                // println!("{} {} : {}", i, p, A[i as usize][p as usize]);
-                k += 1;
-            }
-
-            p += 1;
-            len -= 1;
-        }
-        println!("A : {:?}", A);
-        A
     }
 
     pub fn run(&mut self) {
         println!("RUN !");
-        let mut epochs = 0;
+        let mut epochs: u64 = 0;
         let solved = loop {
             epochs += 1;
+            if epochs > self.max_iteration {
+                println!("Max iterations has been reached. We consider this puzzle unsolvable.");
+                process::exit(1);
+            }
             let current = self.open_list.pop().unwrap();
 
             if current.h == 0.0 {
@@ -215,6 +142,12 @@ impl NPuzzle {
 
             self.close_list.push(parent);
             self.open_list.extend(swaps);
+            let l = self.open_list.len();
+            self.max_state = if l > self.max_state {
+                l
+            } else {
+                self.max_state
+            };
             // println!("NPUZZLE : {:?}", self);
         };
 
@@ -228,6 +161,7 @@ impl NPuzzle {
             });
         }
         println!("EPOCHS : {}", epochs);
+        println!("MAX STATES : {}", self.max_state);
     }
 }
 
@@ -236,8 +170,9 @@ mod tests {
     use super::*;
     #[test]
     fn test_goals() {
+        let goal: Goal = Goal::Snail;
         assert_eq!(
-            NPuzzle::generate_goal(&3, &vec![vec![3, 1, 5], vec![4, 2, 6], vec![0, 8, 7]]),
+            goal.generate(&3, &vec![vec![3, 1, 5], vec![4, 2, 6], vec![0, 8, 7]]),
             vec![vec![1, 2, 3], vec![8, 0, 4], vec![7, 6, 5]]
         );
     }

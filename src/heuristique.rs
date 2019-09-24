@@ -1,19 +1,34 @@
+use std::process;
+
 #[derive(Debug, Clone)]
 pub enum Heuristique {
     Hamming,
     Manhattan,
+    LinearConflict,
 }
 
 impl Heuristique {
-    pub fn process_h(&self, grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
-        match &self {
-            Heuristique::Hamming => Heuristique::process_hamming(grid, goal),
-            Heuristique::Manhattan => Heuristique::process_manhattan(grid, goal),
-            _ => 0.0,
+    pub fn parse(s: String) -> Heuristique {
+        match &s.to_lowercase() as &str {
+            "hamming" => Heuristique::Hamming,
+            "manhattan" => Heuristique::Manhattan,
+            "linearconflict" => Heuristique::LinearConflict,
+            _ => {
+                println!("Heuristique not recognize");
+                process::exit(1);
+            }
         }
     }
 
-    pub fn process_hamming(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
+    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+        match &self {
+            Heuristique::Hamming => Self::process_hamming(grid, goal),
+            Heuristique::Manhattan => Self::process_manhattan(grid, goal),
+            Heuristique::LinearConflict => Self::process_linearconflict(grid, goal),
+        }
+    }
+
+    pub fn process_hamming(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut res = 0.0f64;
         for y in 0..grid.len() {
             for x in 0..grid.len() {
@@ -25,7 +40,7 @@ impl Heuristique {
         res
     }
 
-    pub fn process_manhattan(grid: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
+    pub fn process_manhattan(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let res: f64 = grid
             .iter()
             .enumerate()
@@ -50,5 +65,10 @@ impl Heuristique {
             .sum();
         // println!("HEURISTIQUE RES : {:?}", res);
         res
+    }
+
+    pub fn process_linearconflict(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+        let mut h = Self::process_manhattan(grid, goal);
+        h
     }
 }
