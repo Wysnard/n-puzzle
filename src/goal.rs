@@ -10,6 +10,7 @@ pub enum Goal {
 
 impl Goal {
 	pub fn parse(s: String, file: String) -> Goal {
+		println!("FILE: {}", file);
 		match &s.to_lowercase() as &str {
 			"snail" => Goal::Snail,
 			"standard" | "std" => Goal::Standard,
@@ -22,9 +23,10 @@ impl Goal {
 			.clone()
 			.into_iter()
 			.flatten()
-			.map(|x| if x == 0 { 9223372036854775807 } else { x })
 			.collect();
 		f.sort();
+		let zero = f.remove(0);
+		f.push(zero);
 		let res = match &self {
 			Goal::Snail => Self::generate_snail(size, &f),
 			Goal::Standard => Self::generate_std(size, &f),
@@ -32,14 +34,12 @@ impl Goal {
 		};
 		let mut tmp = res.clone().into_iter().flatten().collect::<Vec<i64>>();
 		tmp.sort();
+		let zero = tmp.remove(0);
+		tmp.push(zero);
+		println!("TMP: {:?}", tmp);
+		println!("F: {:?}", f);
 		if tmp == f {
-			res.iter()
-				.map(|x| {
-					x.iter()
-						.map(|&y| if y == 9223372036854775807 { 0 } else { y })
-						.collect()
-				})
-				.collect()
+			res
 		} else {
 			println!("The Initial State and the Goal State do not correspond");
 			process::exit(1);
@@ -93,6 +93,7 @@ impl Goal {
 	}
 
 	fn generate_custom(size: &i64, file: &str) -> Vec<Vec<i64>> {
+		println!("CUSTOM : {}", file);
 		if let Ok(m) = fs::read_to_string(file) {
 			match parse_file(m) {
 				Ok((_, v)) => v,

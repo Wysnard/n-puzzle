@@ -10,7 +10,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut goal: Goal = Goal::Snail;
     let mut heuristique: Heuristique = Heuristique::Manhattan;
     let mut input: String = "".to_string();
-    let mut max_iteration: u64 = 400_000;
+    let mut max_iteration: u64 = 10_000_000;
     let mut args: Vec<String> = env::args().skip(1).rev().collect();
 
     while let Some(arg) = args.pop() {
@@ -42,7 +42,11 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
                                 process::exit(1);
                             }
                         }
-                        _ => Goal::parse(a, "".to_string()),
+                        "std" | "standard" | "snail" => Goal::parse(a, "".to_string()),
+                        _ => {
+                            println!("Goal arguments missing or invalid");
+                            process::exit(1);
+                        },
                     }
                 } else {
                     println!("No goal given");

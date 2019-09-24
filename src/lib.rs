@@ -7,11 +7,13 @@ pub mod file;
 pub mod goal;
 pub mod heuristique;
 pub mod node;
+pub mod utils;
 
 use file::*;
 use goal::*;
 use heuristique::*;
 use node::*;
+use utils::*;
 
 #[derive(Debug)]
 pub struct NPuzzle {
@@ -36,6 +38,10 @@ impl NPuzzle {
         println!("INITIAL : {:?}", initial);
         let goal = goal.generate(&size, &initial);
         println!("GOAL : {:?}", goal);
+        if !solvable(&initial, &goal) {
+            println!("Unsolvable puzzle");
+            process::exit(1);
+        }
         let h = heuristique.process_h(&initial, &goal);
         println!("Heuristique : {:?}", h);
         let mut open_list: BinaryHeap<Rc<Node>> = BinaryHeap::new();
@@ -59,10 +65,6 @@ impl NPuzzle {
         let mut epochs: u64 = 0;
         let solved = loop {
             epochs += 1;
-            if epochs > self.max_iteration {
-                println!("Max iterations has been reached. We consider this puzzle as unsolvable.");
-                process::exit(1);
-            }
             let current = self.open_list.pop().unwrap();
 
             if current.h == 0.0 {
@@ -71,6 +73,7 @@ impl NPuzzle {
 
             // println!("OPEN LIST : {:?}", self.open_list);
             // println!("CURRENT : {:?}", current);
+            // println!("EPOCH: {}", epochs);
 
             // Empty Space position
             let pos = current
