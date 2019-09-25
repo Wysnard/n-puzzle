@@ -1,0 +1,4 @@
+# This puzzle is solvable
+2
+ 1  2 
+ 3  0

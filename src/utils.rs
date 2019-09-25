@@ -2,7 +2,7 @@ fn interversion(map: &[Vec<i64>], goal: &[Vec<i64>]) -> usize {
     let mut initial: Vec<&i64> = map.iter().flatten().filter(|&&x| x != 0).collect();
     let mut goal: Vec<&i64> = goal.iter().flatten().filter(|&&x| x != 0).collect();
     let mut res: usize = 0;
-    while goal.is_empty() {
+    while !goal.is_empty() {
         let g = goal.remove(0);
         let pos: usize = initial.iter().position(|&x| x == g).unwrap() as usize;
         res += initial[0..pos].iter().count() as usize;

@@ -46,7 +46,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
                         _ => {
                             println!("Goal arguments missing or invalid");
                             process::exit(1);
-                        },
+                        }
                     }
                 } else {
                     println!("No goal given");

@@ -1,0 +1,8 @@
+0-9			=>	grille deja fait
+10-19		=>	grille faisable
+20-39		=>	grille mal cree
+40-44		=>	grille melanger
+45-49		=>	resultat custom
+50-54		=>	autre test impossible
+55-59		=>	test chelou possible
+60-64       =>  test com chelou
