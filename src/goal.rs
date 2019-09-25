@@ -18,12 +18,8 @@ impl Goal {
 		}
 	}
 
-	pub fn generate(&self, size: &i64, map: &Vec<Vec<i64>>) -> Vec<Vec<i64>> {
-		let mut f: Vec<i64> = map
-			.clone()
-			.into_iter()
-			.flatten()
-			.collect();
+	pub fn generate(&self, size: i64, map: &Vec<Vec<i64>>) -> Vec<Vec<i64>> {
+		let mut f: Vec<i64> = map.clone().into_iter().flatten().collect();
 		f.sort();
 		let zero = f.remove(0);
 		f.push(zero);
@@ -46,12 +42,12 @@ impl Goal {
 		}
 	}
 
-	fn generate_snail(size: &i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
+	fn generate_snail(size: i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
 		let mut map = map.iter();
 
-		let mut A: Vec<Vec<i64>> = vec![vec![0; *size as usize]; *size as usize];
-		let n = *size;
-		let mut len = *size;
+		let mut A: Vec<Vec<i64>> = vec![vec![0; size as usize]; size as usize];
+		let n = size;
+		let mut len = size;
 		let mut k = 0;
 		let mut p = 0;
 
@@ -83,16 +79,16 @@ impl Goal {
 		A
 	}
 
-	fn generate_std(size: &i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
+	fn generate_std(size: i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
 		let mut res: Vec<Vec<i64>> = vec![vec![]; 3];
 
 		for (i, c) in map.iter().enumerate() {
-			res[i / *size as usize].push(*c);
+			res[i / size as usize].push(*c);
 		}
 		res
 	}
 
-	fn generate_custom(size: &i64, file: &str) -> Vec<Vec<i64>> {
+	fn generate_custom(size: i64, file: &str) -> Vec<Vec<i64>> {
 		println!("CUSTOM : {}", file);
 		if let Ok(m) = fs::read_to_string(file) {
 			match parse_file(m) {

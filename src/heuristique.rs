@@ -46,11 +46,12 @@ impl Heuristique {
     pub fn process_manhattan(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut res: f64 = 0.0f64;
         for i in 0..grid.len() {
-            for j in 0..grid[i].len() {
+            'enter: for j in 0..grid[i].len() {
                 for x in 0..goal.len() {
                     for y in 0..goal[x].len() {
-                        if grid[i][j] == goal[x][y] {
+                        if grid[i][j] != 0 && grid[i][j] == goal[x][y] {
                             res += (i as f64 - x as f64).abs() + (j as f64 - y as f64).abs();
+                            continue 'enter;
                         }
                     }
                 }
