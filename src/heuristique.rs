@@ -81,12 +81,28 @@ impl Heuristique {
                     })
             })
             .sum();
-        println!("HEURISTIQUE 2 RES : {:?}", res);
+        // println!("HEURISTIQUE 2 RES : {:?}", res);
         res
     }
 
     pub fn process_linearconflict(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
-        let mut h = Self::process_manhattan(grid, goal);
+        let mut h = Self::process_manhattan2(grid, goal);
+        for i in 0..grid.len() {
+            let i = i as i32;
+            for j in 0..grid.len() {
+                let j = j as i32;
+                let (x, y) = find_nb(grid[i as usize][j as usize], goal);
+                if grid[x as usize][y as usize] == 0 {
+                    continue;
+                }
+
+                if (i == x) ^ (j == y) {
+                    if (i - x).abs() as f64 + (j - y).abs() as f64 != 1f64 && goal[x as usize][y as usize] != 0 {
+                        h += 1f64;
+                    }
+                }
+            }
+        }
         h
     }
 }

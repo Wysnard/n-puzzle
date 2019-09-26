@@ -18,6 +18,9 @@ impl Goal {
         }
     }
 
+    /*
+     * Generate the Goal/Final State
+     */
     pub fn generate(&self, size: i64, map: &Vec<Vec<i64>>) -> Vec<Vec<i64>> {
         let mut f: Vec<i64> = map.clone().into_iter().flatten().collect();
         f.sort();

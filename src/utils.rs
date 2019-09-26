@@ -23,15 +23,22 @@ pub fn find_nb(nb: i64, map: &[Vec<i64>]) -> (i32, i32) {
 }
 
 pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
+    if initial == goal {
+        return true        
+    }
     let interv = interversion(initial, goal);
-    let size = initial.len();
+    println!("INTERVERSION: {}", interv);
+    let size = goal.len();
     let res = match size % 2 {
         1 => match interv % 2 {
             0 => true,
             _ => false,
         },
-        _ => {
-            let (x, y) = find_nb(0, initial);
+        0 => {
+            println!("ODD");
+            println!("GOAL: {:?}", goal);
+            let (x, y) = find_nb(0, goal);
+            println!("X, Y: {}, {}", x, y);
             if x % 2 == 0 && interv % 2 == 1 {
                 true
             } else if x % 2 == 1 && interv % 2 == 0 {
@@ -40,7 +47,9 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
                 false
             }
         }
+        _ => false,
     };
+    println!("RES: {}", res);
     res
 }
 

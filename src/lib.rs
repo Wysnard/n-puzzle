@@ -101,6 +101,7 @@ impl NPuzzle {
                         &self.heuristique,
                     ))
                 })
+                .filter(|swap| self.close_list.is_empty() || !self.close_list.contains(swap))
                 .collect();
 
             self.close_list.push(parent);
