@@ -79,14 +79,15 @@ pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {
         for j in i..size {
             for x in 0..size {
                 for y in x..size {
-                    if (map[i as usize][x as usize] == map[j as usize][y as usize]) {
+                    if (map[i as usize][x as usize] == map[j as usize][y as usize] && (i != j || x != y)) {
+						println!("{} | {}",map[i as usize][x as usize], map[j as usize][y as usize]);
                         return true;
                     }
                 }
             }
         }
     }
-    false
+    return false;
 }
 
 #[cfg(test)]
@@ -178,5 +179,36 @@ mod tests {
         ];
         assert_eq!(true, with_duplicate(initial));
     }
+    #[test]
+    fn test_duplicate_2() {
+        let initial = &vec![
+            vec![1, 2, 3, 4],
+            vec![5, 6, 7, 8],
+            vec![9, 10, 11, 12],
+            vec![13, 14, 15, 0],
+        ];
+        assert_eq!(false, with_duplicate(initial));
+    }
+    #[test]
+    fn test_duplicate_3() {
+        let initial = &vec![
+            vec![1, 2, 3, 4],
+            vec![5, 1, 7, 8],
+            vec![9, 10, 11, 12],
+            vec![13, 14, 15, 0],
+        ];
+        assert_eq!(true, with_duplicate(initial));
+    }
+	    #[test]
+    fn test_duplicate_4() {
+        let initial = &vec![
+            vec![1, 2, 3, 4],
+            vec![5, 6, 7, 8],
+            vec![9, 10, 11, 12],
+            vec![1, 14, 15, 0],
+        ];
+        assert_eq!(true, with_duplicate(initial));
+    }
+
 
 }
