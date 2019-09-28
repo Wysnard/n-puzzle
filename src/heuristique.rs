@@ -97,7 +97,9 @@ impl Heuristique {
                 }
 
                 if (i == x) ^ (j == y) {
-                    if (i - x).abs() as f64 + (j - y).abs() as f64 != 1f64 && goal[x as usize][y as usize] != 0 {
+                    if (i - x).abs() as f64 + (j - y).abs() as f64 != 1f64
+                        && goal[x as usize][y as usize] != 0
+                    {
                         h += 1f64;
                     }
                 }

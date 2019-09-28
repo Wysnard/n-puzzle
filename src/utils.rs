@@ -1,3 +1,7 @@
+extern crate rand;
+
+use rand::Rng;
+
 fn interversion(map: &[Vec<i64>], goal: &[Vec<i64>]) -> usize {
     let mut initial: Vec<&i64> = map.iter().flatten().filter(|&&x| x != 0).collect();
     let mut goal: Vec<&i64> = goal.iter().flatten().filter(|&&x| x != 0).collect();
@@ -24,7 +28,7 @@ pub fn find_nb(nb: i64, map: &[Vec<i64>]) -> (i32, i32) {
 
 pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
     if initial == goal {
-        return true        
+        return true;
     }
     let interv = interversion(initial, goal);
     println!("INTERVERSION: {}", interv);
@@ -35,9 +39,9 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
             _ => false,
         },
         0 => {
-            println!("ODD");
-            println!("GOAL: {:?}", goal);
-            let (x, y) = find_nb(0, goal);
+            println!("EVEN");
+            println!("INITIAL: {:?}", initial);
+            let (x, y) = find_nb(0, initial);
             println!("X, Y: {}, {}", x, y);
             if x % 2 == 0 && interv % 2 == 1 {
                 true
@@ -51,6 +55,38 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
     };
     println!("RES: {}", res);
     res
+}
+
+pub fn creat_new_rand(size: usize) -> Vec<Vec<i64>> {
+    let mut newGrid = Vec::new();
+    let mut rng = rand::thread_rng();
+    newGrid.push(0 as i64);
+    for i in 1..size.pow(2) {
+        newGrid.insert(rng.gen_range(0, i + 1), i as i64);
+    }
+    let mut givedGrid = Vec::new();
+    for i in 0..size {
+        let mut tempVect = Vec::new();
+        tempVect = newGrid.drain(..size).collect();
+        givedGrid.push(tempVect);
+    }
+    givedGrid
+}
+
+pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {
+	let size = map.len();
+    for i in 0..size {
+        for j in i..size {
+            for x in 0..size {
+                for y in x..size {
+                    if (map[i as usize][x as usize] == map[j as usize][y as usize]) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]
@@ -132,4 +168,15 @@ mod tests {
         ];
         assert_eq!(false, solvable(initial, goal));
     }
+    #[test]
+    fn test_duplicate_1() {
+        let initial = &vec![
+            vec![1, 9, 1, 15],
+            vec![14, 11, 4, 6],
+            vec![13, 0, 10, 12],
+            vec![2, 7, 8, 5],
+        ];
+        assert_eq!(true, with_duplicate(initial));
+    }
+
 }
