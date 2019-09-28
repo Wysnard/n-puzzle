@@ -15,7 +15,7 @@ impl Heuristique {
             "manhattan" => Heuristique::Manhattan,
             "linearconflict" => Heuristique::LinearConflict,
             _ => {
-                println!("Heuristique not recognize");
+                println!("Heuristique not recognized");
                 process::exit(1);
             }
         }

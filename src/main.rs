@@ -1,6 +1,9 @@
 use npuzzle::goal::Goal;
 use npuzzle::heuristique::Heuristique;
 use npuzzle::NPuzzle;
+use npuzzle::utils::*;
+use npuzzle::algorithm::*;
+use npuzzle::strategy::*;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -9,6 +12,8 @@ use std::process;
 fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut goal: Goal = Goal::Snail;
     let mut heuristique: Heuristique = Heuristique::Manhattan;
+    let mut algorithm: Algorithm = Algorithm::AStar;
+    let mut strategy: Strategy = Strategy::Standard;
     let mut input: String = "".to_string();
     let mut max_iteration: u64 = 10_000_000;
     let mut args: Vec<String> = env::args().skip(1).rev().collect();
@@ -17,7 +22,17 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
         match &arg as &str {
             "--input" | "-i" => {
                 if let Some(a) = args.pop() {
-                    input = fs::read_to_string(a)?;
+                    if let Ok(a) = a.parse::<usize>() {
+                        if a < 5 && a > 0 {
+                            input = creat_new_rand(a);
+                        }
+                        else {
+                            println!("Map size has to be between 1 and 4 included");
+                            process::exit(0);
+                        }
+                    } else {
+                        input = fs::read_to_string(a)?;
+                    }
                 } else {
                     println!("No file input given");
                     process::exit(1);
@@ -28,6 +43,22 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
                     heuristique = Heuristique::parse(a);
                 } else {
                     println!("No heuristique given");
+                    process::exit(1);
+                }
+            }
+            "--algorithm" | "--algo" | "-a" => {
+                if let Some(a) = args.pop() {
+                    algorithm = Algorithm::parse(a);
+                } else {
+                    println!("No algorithm given");
+                    process::exit(1);
+                }
+            }
+            "--strategy" | "--strat" | "-s" => {
+                if let Some(a) = args.pop() {
+                    strategy = Strategy::parse(a);
+                } else {
+                    println!("No strategy given");
                     process::exit(1);
                 }
             }
@@ -75,7 +106,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
             }
         };
     }
-    let puzzle = NPuzzle::new(input, heuristique, goal, max_iteration).unwrap_or_else(|err| {
+    let puzzle = NPuzzle::new(input, heuristique, algorithm, strategy, goal, max_iteration).unwrap_or_else(|err| {
         eprintln!("Problem with the format of the map : {}", err);
         process::exit(1);
     });
@@ -83,7 +114,9 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut puzzle = input_manager()?;
-    puzzle.run();
+    match input_manager() {
+        Ok(mut puzzle) => puzzle.run(),
+        Err(e) => println!("Sorry, You have a mental disease : {}", e),
+    }
     Ok(())
 }

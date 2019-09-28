@@ -8,18 +8,24 @@ pub mod goal;
 pub mod heuristique;
 pub mod node;
 pub mod utils;
+pub mod algorithm;
+pub mod strategy;
 
 use file::*;
 use goal::*;
 use heuristique::*;
 use node::*;
 use utils::*;
+use algorithm::*;
+use strategy::*;
 
 #[derive(Debug)]
 pub struct NPuzzle {
     pub size: i64,
     pub goal: Vec<Vec<i64>>,
     pub heuristique: Heuristique,
+	pub algorithm: Algorithm,
+	pub strategy: Strategy,
     pub open_list: BinaryHeap<Rc<Node>>,
     pub close_list: Vec<Rc<Node>>,
     pub max_state: usize,
@@ -30,6 +36,8 @@ impl NPuzzle {
     pub fn new(
         arg: String,
         heuristique: Heuristique,
+		algorithm: Algorithm,
+		strategy: Strategy,
         goal: Goal,
         max_iteration: u64,
     ) -> Result<NPuzzle, Box<dyn Error>> {
@@ -50,6 +58,8 @@ impl NPuzzle {
             size,
             goal: goal.clone(),
             heuristique: heuristique.clone(),
+			algorithm,
+			strategy,
             open_list,
             close_list: Vec::new(),
             max_state: 0,
@@ -60,7 +70,28 @@ impl NPuzzle {
     /*
      * Main loop which runs the algorithm
      */
-    pub fn run(&mut self) {
+	pub fn run(&mut self) {
+		let (epochs, solved) = match self.algorithm {
+			Algorithm::AStar => self.run_AStar(),
+			Algorithm::Greedy => self.run_Greedy(),
+			_ => self.run_AStar(),
+		};
+		// Display of the solved puzzle
+        println!("RESOLVED :");
+        fn display(cur: &Option<Rc<Node>>) {
+            if cur.is_some() {
+                let _ = cur.as_ref().map(|node| {
+                    display(&node.parent);
+                    println!("{}", node);
+                });
+            }
+        }
+        display(&Some(solved));
+        println!("EPOCHS : {}", epochs);
+        println!("MAX STATES : {}", self.max_state);
+	}
+
+    pub fn run_AStar(&mut self) -> (u64, Rc<Node>) {
         println!("RUN !");
         let mut epochs: u64 = 0;
         let solved = loop {
@@ -79,7 +110,7 @@ impl NPuzzle {
             // println!("POS: {:?}", pos);
 
             let current_grid = current.grid.clone();
-            let goal = self.goal.clone();
+            let goal = self.strategy.process(&current_grid ,self.goal.clone());
             let parent = current;
             let swaps: Vec<Rc<Node>> = vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
                 .iter()
@@ -103,9 +134,9 @@ impl NPuzzle {
                 })
                 .filter(|swap| self.close_list.is_empty() || !self.close_list.contains(swap))
                 .collect();
-
             self.close_list.push(parent);
             self.open_list.extend(swaps);
+			
             let l = self.open_list.len();
             self.max_state = if l > self.max_state {
                 l
@@ -114,21 +145,12 @@ impl NPuzzle {
             };
             // println!("NPUZZLE : {:?}", self);
         };
-
-        // Display of the solved puzzle
-        println!("RESOLVED :");
-        fn display(cur: &Option<Rc<Node>>) {
-            if cur.is_some() {
-                let _ = cur.as_ref().map(|node| {
-                    display(&node.parent);
-                    println!("{}", node);
-                });
-            }
-        }
-        display(&Some(solved));
-        println!("EPOCHS : {}", epochs);
-        println!("MAX STATES : {}", self.max_state);
+		(epochs, solved)
     }
+
+	fn run_Greedy(&mut self) -> (u64, Rc<Node>) {
+		self.run_AStar()
+	}
 }
 
 #[cfg(test)]

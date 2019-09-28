@@ -83,7 +83,7 @@ impl Goal {
     }
 
     fn generate_std(size: i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
-        let mut res: Vec<Vec<i64>> = vec![vec![]; 3];
+        let mut res: Vec<Vec<i64>> = vec![vec![]; size as usize];
 
         for (i, c) in map.iter().enumerate() {
             res[i / size as usize].push(*c);

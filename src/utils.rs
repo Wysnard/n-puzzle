@@ -57,20 +57,19 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
     res
 }
 
-pub fn creat_new_rand(size: usize) -> Vec<Vec<i64>> {
+pub fn creat_new_rand(size: usize) -> String {
     let mut newGrid = Vec::new();
     let mut rng = rand::thread_rng();
     newGrid.push(0 as i64);
     for i in 1..size.pow(2) {
         newGrid.insert(rng.gen_range(0, i + 1), i as i64);
     }
-    let mut givedGrid = Vec::new();
+	let mut returnValue = format!("{}\n", size);
     for i in 0..size {
-        let mut tempVect = Vec::new();
-        tempVect = newGrid.drain(..size).collect();
-        givedGrid.push(tempVect);
+        let tempVect: String = newGrid.drain(..size).map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
+		returnValue = format!("{}\n{}",returnValue, tempVect);
     }
-    givedGrid
+	returnValue
 }
 
 pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {
@@ -79,7 +78,7 @@ pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {
         for j in i..size {
             for x in 0..size {
                 for y in x..size {
-                    if (map[i as usize][x as usize] == map[j as usize][y as usize] && (i != j || x != y)) {
+                    if map[i as usize][x as usize] == map[j as usize][y as usize] && (i != j || x != y) {
 						println!("{} | {}",map[i as usize][x as usize], map[j as usize][y as usize]);
                         return true;
                     }
