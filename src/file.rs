@@ -14,7 +14,6 @@ impl fmt::Display for FileParsingError {
             FileParsingError::EmptyMap => write!(f, "It seems that the input file is empty"),
             FileParsingError::BadSize => write!(f, "Map size is incorrect."),
             FileParsingError::NoEmptySpace => write!(f, "The empty space (0) is missing"),
-            _ => write!(f, "Format Error."),
         }
     }
 }

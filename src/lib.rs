@@ -74,7 +74,6 @@ impl NPuzzle {
 		let (epochs, solved) = match self.algorithm {
 			Algorithm::AStar => self.run_astar(),
 			Algorithm::Greedy => self.run_greedy(),
-			_ => self.run_astar(),
 		};
 		// Display of the solved puzzle
 		println!("RESOLVED :");

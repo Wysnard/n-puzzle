@@ -106,19 +106,19 @@ impl fmt::Debug for Node {
 mod tests {
     use super::*;
     #[test]
-    fn test_Node_equality() {
-        let mut first = Node {
+    fn test_node_equality() {
+        let first = Node {
             grid: vec![vec![0; 3]; 3],
             g: 5.0f64,
             h: 5.0f64,
             parent: None,
         };
-        let mut second = first.clone();
+        let second = first.clone();
         assert_eq!(true, first == second);
     }
     #[test]
-    fn test_Node_inequality() {
-        let mut first = Node {
+    fn test_node_inequality() {
+        let first = Node {
             grid: vec![vec![0; 3]; 3],
             g: 5.0f64,
             h: 5.0f64,
