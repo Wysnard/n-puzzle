@@ -6,6 +6,7 @@ pub enum Heuristique {
     Hamming,
     Manhattan,
     LinearConflict,
+    Euclide,
 }
 
 impl Heuristique {
@@ -14,6 +15,7 @@ impl Heuristique {
             "hamming" => Heuristique::Hamming,
             "manhattan" => Heuristique::Manhattan,
             "linearconflict" => Heuristique::LinearConflict,
+            "euclide" => Heuristique::Euclide,
             _ => {
                 println!("Heuristique not recognized");
                 process::exit(1);
@@ -26,10 +28,11 @@ impl Heuristique {
             Heuristique::Hamming => Self::process_hamming(grid, goal),
             Heuristique::Manhattan => Self::process_manhattan(grid, goal),
             Heuristique::LinearConflict => Self::process_linearconflict(grid, goal),
+            Heuristique::Euclide => Self::process_euclid(grid, goal),
         }
     }
 
-    pub fn process_hamming(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    fn process_hamming(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut res = 0.0f64;
         for y in 0..grid.len() {
             for x in 0..grid.len() {
@@ -44,10 +47,10 @@ impl Heuristique {
         res
     }
 
-    pub fn process_manhattan(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    fn process_manhattan(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut res: f64 = 0.0f64;
         for i in 0..grid.len() {
-            'enter: for j in 0..grid[i].len() {
+            for j in 0..grid[i].len() {
                 let (x, y) = find_nb(grid[i][j], goal);
                 if grid[i][j] != 0 && grid[i][j] == goal[x as usize][y as usize] {
                     res += (i as f64 - x as f64).abs() + (j as f64 - y as f64).abs();
@@ -58,10 +61,10 @@ impl Heuristique {
         res
     }
 
-    pub fn process_euclid(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    fn process_euclid(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut res: f64 = 0.0f64;
         for i in 0..grid.len() {
-            'enter: for j in 0..grid[i].len() {
+            for j in 0..grid[i].len() {
                 let (x, y) = find_nb(grid[i][j], goal);
                 if grid[i][j] != 0 && grid[i][j] == goal[x as usize][y as usize] {
                     res += ((i as f64 - x as f64) * (i as f64 - x as f64) + (j as f64 - y as f64) * (j as f64 - y as f64)).sqrt();
@@ -72,34 +75,7 @@ impl Heuristique {
         res
     }
 
-    pub fn process_manhattan2(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
-        let res: f64 = grid
-            .iter()
-            .enumerate()
-            .map(|(y, line)| {
-                line.iter()
-                    .enumerate()
-                    .filter(|(_, col)| **col != 0)
-                    .fold(0f64, |acc, (x, col)| {
-                        let g = goal
-                            .iter()
-                            .enumerate()
-                            .filter(|(_, l)| l.iter().any(|c| c == col))
-                            .fold((0f64, 0f64), |_, (g_y, l)| {
-                                (
-                                    g_y as f64,
-                                    l.iter().enumerate().find(|c| c.1 == col).unwrap().0 as f64,
-                                )
-                            });
-                        acc + (g.0 - y as f64).abs() + (g.1 - x as f64).abs()
-                    })
-            })
-            .sum();
-        // println!("HEURISTIQUE 2 RES : {:?}", res);
-        res
-    }
-
-    pub fn process_linearconflict(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    fn process_linearconflict(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
         let mut h = Self::process_manhattan(grid, goal);
         for i in 0..grid.len() {
             let i = i as i32;
