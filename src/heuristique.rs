@@ -21,7 +21,7 @@ impl Heuristique {
         }
     }
 
-    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> Vec<Vec<f64>> {
         match &self {
             Heuristique::Hamming => Self::process_hamming(grid, goal),
             Heuristique::Manhattan => Self::process_manhattan(grid, goal),
@@ -29,19 +29,23 @@ impl Heuristique {
         }
     }
 
-    fn process_hamming(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
-        let mut res = 0.0f64;
-        for y in 0..grid.len() {
-            for x in 0..grid.len() {
-                if grid[y][x] == 0 {
-                    continue;
-                }
-                if grid[y][x] != goal[y][x] {
-                    res += 1.0f64;
-                }
-            }
-        }
-        res
+    fn process_hamming(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> Vec<Vec<f64>> {
+        grid.iter()
+            .enumerate()
+            .map(|(i, x)| {
+                x.iter()
+                    .enumerate()
+                    .map(|(j, &y)| {
+                        let (a, b) = find_nb(y, goal);
+                        if (a as usize) == i && (b as usize) == j {
+                            1f64
+                        } else {
+                            0f64
+                        }
+                    })
+                    .collect()
+            })
+            .collect()
     }
 
     fn process_manhattan(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::rc::Rc;
 
-use super::heuristique::*;
+use super::strategy::*;
 
 type Link = Option<Rc<Node>>;
 
@@ -18,15 +18,15 @@ impl Node {
     pub fn new(
         grid: Vec<Vec<i64>>,
         parent: Link,
-        goal: &[Vec<i64>],
-        heuristique: &Heuristique,
+        goal: &Vec<Vec<i64>>,
+        strategy: &Strategy,
     ) -> Node {
         let g = parent.clone();
         let g = match g {
             Some(n) => n.g + 1.0,
             None => 0.0,
         };
-        let h = heuristique.process_h(&grid, goal);
+        let h = strategy.process(&grid, goal);
         Node { grid, h, g, parent }
     }
 

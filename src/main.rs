@@ -1,9 +1,9 @@
+use npuzzle::algorithm::*;
 use npuzzle::goal::Goal;
 use npuzzle::heuristique::Heuristique;
-use npuzzle::NPuzzle;
-use npuzzle::utils::*;
-use npuzzle::algorithm::*;
 use npuzzle::strategy::*;
+use npuzzle::utils::*;
+use npuzzle::NPuzzle;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -13,7 +13,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut goal: Goal = Goal::Snail;
     let mut heuristique: Heuristique = Heuristique::Manhattan;
     let mut algorithm: Algorithm = Algorithm::AStar;
-    let mut strategy: Strategy = Strategy::Standard;
+    let mut strategy: String = "std".to_string();
     let mut input: String = "".to_string();
     let mut max_iteration: u64 = 10_000_000;
     let mut args: Vec<String> = env::args().skip(1).rev().collect();
@@ -25,8 +25,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
                     if let Ok(a) = a.parse::<usize>() {
                         if a < 5 && a > 0 {
                             input = creat_new_rand(a);
-                        }
-                        else {
+                        } else {
                             println!("Map size has to be between 1 and 4 included");
                             process::exit(0);
                         }
@@ -56,7 +55,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
             }
             "--strategy" | "--strat" | "-s" => {
                 if let Some(a) = args.pop() {
-                    strategy = Strategy::parse(a);
+                    strategy = a;
                 } else {
                     println!("No strategy given");
                     process::exit(1);
@@ -106,10 +105,11 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
             }
         };
     }
-    let puzzle = NPuzzle::new(input, heuristique, algorithm, strategy, goal, max_iteration).unwrap_or_else(|err| {
-        eprintln!("Problem with the format of the map : {}", err);
-        process::exit(1);
-    });
+    let puzzle = NPuzzle::new(input, heuristique, algorithm, strategy, goal, max_iteration)
+        .unwrap_or_else(|err| {
+            eprintln!("Problem with the format of the map : {}", err);
+            process::exit(1);
+        });
     Ok(puzzle)
 }
 

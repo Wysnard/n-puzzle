@@ -1,5 +1,5 @@
-use std::process;
 use super::*;
+use std::process;
 
 #[derive(Debug)]
 pub enum Algorithm {

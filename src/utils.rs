@@ -64,22 +64,31 @@ pub fn creat_new_rand(size: usize) -> String {
     for i in 1..size.pow(2) {
         new_grid.insert(rng.gen_range(0, i + 1), i as i64);
     }
-	let mut return_value = format!("{}\n", size);
+    let mut return_value = format!("{}\n", size);
     for _i in 0..size {
-        let temp_vect: String = new_grid.drain(..size).map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
-		return_value = format!("{}\n{}",return_value, temp_vect);
+        let temp_vect: String = new_grid
+            .drain(..size)
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(" ");
+        return_value = format!("{}\n{}", return_value, temp_vect);
     }
-	return_value
+    return_value
 }
 
 pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {
-	let size = map.len();
+    let size = map.len();
     for i in 0..size {
         for j in i..size {
             for x in 0..size {
                 for y in x..size {
-                    if map[i as usize][x as usize] == map[j as usize][y as usize] && (i != j || x != y) {
-						println!("{} | {}",map[i as usize][x as usize], map[j as usize][y as usize]);
+                    if map[i as usize][x as usize] == map[j as usize][y as usize]
+                        && (i != j || x != y)
+                    {
+                        println!(
+                            "{} | {}",
+                            map[i as usize][x as usize], map[j as usize][y as usize]
+                        );
                         return true;
                     }
                 }
@@ -198,7 +207,7 @@ mod tests {
         ];
         assert_eq!(true, with_duplicate(initial));
     }
-	    #[test]
+    #[test]
     fn test_duplicate_4() {
         let initial = &vec![
             vec![1, 2, 3, 4],
@@ -208,6 +217,5 @@ mod tests {
         ];
         assert_eq!(true, with_duplicate(initial));
     }
-
 
 }
