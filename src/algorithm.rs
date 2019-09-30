@@ -19,19 +19,3 @@ impl Algorithm {
         }
     }
 }
-
-pub trait Algo {
-    fn run(&self);
-}
-
-#[derive(Debug)]
-pub struct AStar {
-    pub open_list: BinaryHeap<Rc<Node>>,
-    pub close_list: Vec<Rc<Node>>,
-}
-
-impl Algo for AStar {
-    fn run(&self) {
-        println!("{:?}", self.close_list);
-    }
-}

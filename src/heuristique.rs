@@ -6,7 +6,6 @@ pub enum Heuristique {
     Hamming,
     Manhattan,
     LinearConflict,
-    Euclide,
 }
 
 impl Heuristique {
@@ -15,7 +14,6 @@ impl Heuristique {
             "hamming" => Heuristique::Hamming,
             "manhattan" => Heuristique::Manhattan,
             "linearconflict" => Heuristique::LinearConflict,
-            "euclide" => Heuristique::Euclide,
             _ => {
                 println!("Heuristique not recognized");
                 process::exit(1);
@@ -28,7 +26,6 @@ impl Heuristique {
             Heuristique::Hamming => Self::process_hamming(grid, goal),
             Heuristique::Manhattan => Self::process_manhattan(grid, goal),
             Heuristique::LinearConflict => Self::process_linearconflict(grid, goal),
-            Heuristique::Euclide => Self::process_euclid(grid, goal),
         }
     }
 
@@ -54,20 +51,6 @@ impl Heuristique {
                 let (x, y) = find_nb(grid[i][j], goal);
                 if grid[i][j] != 0 && grid[i][j] == goal[x as usize][y as usize] {
                     res += (i as f64 - x as f64).abs() + (j as f64 - y as f64).abs();
-                }
-            }
-        }
-        // println!("HEURISTIQUE RES : {:?}", res);
-        res
-    }
-
-    fn process_euclid(grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
-        let mut res: f64 = 0.0f64;
-        for i in 0..grid.len() {
-            for j in 0..grid[i].len() {
-                let (x, y) = find_nb(grid[i][j], goal);
-                if grid[i][j] != 0 && grid[i][j] == goal[x as usize][y as usize] {
-                    res += ((i as f64 - x as f64) * (i as f64 - x as f64) + (j as f64 - y as f64) * (j as f64 - y as f64)).sqrt();
                 }
             }
         }
@@ -107,11 +90,5 @@ mod tests {
         let initial = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![8, 7, 0]];
         let goal = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 0]];
         assert_eq!(2f64, Heuristique::process_manhattan(initial, goal));
-    }
-    #[test]
-    fn test_solvable_2() {
-        let initial = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![8, 7, 0]];
-        let goal = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 0]];
-        assert_eq!(2f64, Heuristique::process_manhattan2(initial, goal));
     }
 }

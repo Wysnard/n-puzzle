@@ -71,26 +71,6 @@ impl NPuzzle {
 	 * Main loop which runs the algorithm
 	 */
 	pub fn run(&mut self) {
-		let (epochs, solved) = match self.algorithm {
-			Algorithm::AStar => self.run_astar(),
-			Algorithm::Greedy => self.run_greedy(),
-		};
-		// Display of the solved puzzle
-		println!("RESOLVED :");
-		fn display(cur: &Option<Rc<Node>>) {
-			if cur.is_some() {
-				let _ = cur.as_ref().map(|node| {
-					display(&node.parent);
-					println!("{}", node);
-				});
-			}
-		}
-		display(&Some(solved));
-		println!("EPOCHS : {}", epochs);
-		println!("MAX STATES : {}", self.max_state);
-	}
-
-	pub fn run_astar(&mut self) -> (u64, Rc<Node>) {
 		println!("RUN !");
 		let mut epochs: u64 = 0;
 		let solved = loop {
@@ -144,11 +124,19 @@ impl NPuzzle {
 			};
 			// println!("NPUZZLE : {:?}", self);
 		};
-		(epochs, solved)
-	}
-
-	fn run_greedy(&mut self) -> (u64, Rc<Node>) {
-		self.run_astar()
+		// Display of the solved puzzle
+		println!("RESOLVED :");
+		fn display(cur: &Option<Rc<Node>>) {
+			if cur.is_some() {
+				let _ = cur.as_ref().map(|node| {
+					display(&node.parent);
+					println!("{}", node);
+				});
+			}
+		}
+		display(&Some(solved));
+		println!("EPOCHS : {}", epochs);
+		println!("MAX STATES : {}", self.max_state);
 	}
 }
 
