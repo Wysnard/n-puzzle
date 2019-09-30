@@ -54,7 +54,7 @@ impl Ord for Node {
 
 impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
-        self.grid == other.grid && self.g == other.g
+        self.grid == other.grid && self.g <= other.g
     }
 }
 

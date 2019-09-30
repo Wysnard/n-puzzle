@@ -70,9 +70,11 @@ impl NPuzzle {
     pub fn run(&mut self) {
         println!("RUN !");
         let mut epochs: u64 = 0;
+		let mut next = self.open_list.pop().unwrap();
+
         let solved = loop {
             epochs += 1;
-            let current = self.open_list.pop().unwrap();
+            let current = next;
 
             if current.h == 0.0 {
                 break current;
@@ -82,31 +84,20 @@ impl NPuzzle {
             // println!("CURRENT : {:?}", current);
             // println!("EPOCH: {}", epochs);
 
-            let pos = find_nb(0, &current.grid);
-            // println!("POS: {:?}", pos);
+            let mut swaps: BinaryHeap<Rc<Node>> = self.generate_swaps(find_nb(0, &current.grid), &current);
+            self.close_list.push(current);
 
-            let current_grid = current.grid.clone();
-            let goal = self.goal.clone();
-            let parent = current;
-            let swaps: Vec<Rc<Node>> = vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
-                .iter()
-                .filter(|&(x, y)| {
-                    pos.0 + x >= 0
-                        && pos.1 + y >= 0
-                        && pos.0 + x < self.size as i32
-                        && pos.1 + y < self.size as i32
-                })
-                .map(|(x, y)| {
-                    let mut swap = current_grid.clone();
-                    swap[pos.0 as usize][pos.1 as usize] =
-                        swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
-                    swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
-                    Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.strategy))
-                })
-                .filter(|swap| self.close_list.is_empty() || !self.close_list.contains(swap))
-                .collect();
-            self.close_list.push(parent);
-            self.open_list.extend(swaps);
+			match self.algorithm {
+				Algorithm::AStar => {
+					self.open_list.extend(swaps);
+					next = self.open_list.pop().unwrap();
+				},
+				Algorithm::Greedy => {
+					next = swaps.pop().unwrap_or_else(|| self.open_list.pop().unwrap());
+					self.open_list.extend(swaps);
+				},
+			};
+            
 
             let l = self.open_list.len();
             self.max_state = if l > self.max_state {
@@ -130,6 +121,29 @@ impl NPuzzle {
         println!("EPOCHS : {}", epochs);
         println!("MAX STATES : {}", self.max_state);
     }
+
+	fn generate_swaps(&self, pos: (i32, i32), parent: &Rc<Node>) -> BinaryHeap<Rc<Node>> {
+		let current_grid = parent.grid.clone();
+		let goal = self.goal.clone();
+
+		vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
+                .iter()
+                .filter(|&(x, y)| {
+                    pos.0 + x >= 0
+                        && pos.1 + y >= 0
+                        && pos.0 + x < self.size as i32
+                        && pos.1 + y < self.size as i32
+                })
+                .map(|(x, y)| {
+                    let mut swap = current_grid.clone();
+                    swap[pos.0 as usize][pos.1 as usize] =
+                        swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
+                    swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
+                    Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.strategy))
+                })
+                .filter(|swap| !self.close_list.contains(swap))
+                .collect()
+	}
 }
 
 #[cfg(test)]
