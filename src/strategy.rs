@@ -34,7 +34,16 @@ impl Strategy {
     	*	Init the sandwich strategy
     	*/
     fn init_sandwich(weight: &mut Vec<Vec<f64>>, goal: &Vec<Vec<i64>>) {
-        *weight = vec![];
+        *weight = Vec::new();
+        let (x, y) = find_nb(0, goal);
+        for i in 0..goal.len() {
+            let mut new_grid = Vec::new();
+            for j in 0..goal.len() {
+                let max = (i as f64 - x as f64).abs().max((j as f64 - y as f64).abs());
+                new_grid.push(max);
+            }
+            weight.push(new_grid);
+        }
     }
 
     pub fn process(&self, current: &Vec<Vec<i64>>, goal: &Vec<Vec<i64>>) -> f64 {
@@ -51,7 +60,7 @@ impl Strategy {
         current: &Vec<Vec<i64>>,
         goal: &Vec<Vec<i64>>,
     ) -> f64 {
-        heuristique.process_h(current, &goal)
+        heuristique.process_h(current, &goal).iter().map(|x| x.iter().sum()).collect::<Vec<f64>>().iter().sum()
     }
 
     fn process_sandwich(
