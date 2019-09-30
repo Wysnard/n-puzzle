@@ -12,7 +12,7 @@ impl Heuristique {
     pub fn parse(s: String) -> Heuristique {
         match &s.to_lowercase() as &str {
             "hamming" => Heuristique::Hamming,
-            "manhattan" => Heuristique::Manhattan,
+            "std" | "manhattan" => Heuristique::Manhattan,
             "linearconflict" => Heuristique::LinearConflict,
             _ => {
                 println!("Heuristique not recognized");
@@ -21,9 +21,9 @@ impl Heuristique {
         }
     }
 
-    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> f64 {
+    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> Vec<Vec<f64>> {
         match &self {
-            Heuristique::Hamming => Self::process_manhattan(grid, goal),
+            Heuristique::Hamming => Self::process_hamming(grid, goal),
             Heuristique::Manhattan => Self::process_manhattan(grid, goal),
             Heuristique::LinearConflict => Self::process_linearconflict(grid, goal),
         }

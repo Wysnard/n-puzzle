@@ -49,7 +49,9 @@ impl NPuzzle {
             println!("Unsolvable puzzle");
             process::exit(1);
         }
-        let strategy = Strategy::parse(strategy, heuristique);
+        let mut strategy = Strategy::parse(strategy, heuristique);
+        strategy.init(&goal);
+        println!("Strategy: {:?}", strategy);
         let mut open_list: BinaryHeap<Rc<Node>> = BinaryHeap::new();
         open_list.push(Rc::new(Node::new(initial, None, &goal, &strategy)));
         Ok(NPuzzle {
@@ -70,7 +72,7 @@ impl NPuzzle {
     pub fn run(&mut self) {
         println!("RUN !");
         let mut epochs: u64 = 0;
-		let mut next = self.open_list.pop().unwrap();
+        let mut next = self.open_list.pop().unwrap();
 
         let solved = loop {
             epochs += 1;
@@ -81,23 +83,23 @@ impl NPuzzle {
             }
 
             // println!("OPEN LIST : {:?}", self.open_list);
-            // println!("CURRENT : {:?}", current);
+            println!("CURRENT : {:?}", current);
             // println!("EPOCH: {}", epochs);
 
-            let mut swaps: BinaryHeap<Rc<Node>> = self.generate_swaps(find_nb(0, &current.grid), &current);
+            let mut swaps: BinaryHeap<Rc<Node>> =
+                self.generate_swaps(find_nb(0, &current.grid), &current);
             self.close_list.push(current);
 
-			match self.algorithm {
-				Algorithm::AStar => {
-					self.open_list.extend(swaps);
-					next = self.open_list.pop().unwrap();
-				},
-				Algorithm::Greedy => {
-					next = swaps.pop().unwrap_or_else(|| self.open_list.pop().unwrap());
-					self.open_list.extend(swaps);
-				},
-			};
-            
+            match self.algorithm {
+                Algorithm::AStar => {
+                    self.open_list.extend(swaps);
+                    next = self.open_list.pop().unwrap();
+                }
+                Algorithm::Greedy => {
+                    next = swaps.pop().unwrap_or_else(|| self.open_list.pop().unwrap());
+                    self.open_list.extend(swaps);
+                }
+            };
 
             let l = self.open_list.len();
             self.max_state = if l > self.max_state {
@@ -122,28 +124,28 @@ impl NPuzzle {
         println!("MAX STATES : {}", self.max_state);
     }
 
-	fn generate_swaps(&self, pos: (i32, i32), parent: &Rc<Node>) -> BinaryHeap<Rc<Node>> {
-		let current_grid = parent.grid.clone();
-		let goal = self.goal.clone();
+    fn generate_swaps(&self, pos: (i32, i32), parent: &Rc<Node>) -> BinaryHeap<Rc<Node>> {
+        let current_grid = parent.grid.clone();
+        let goal = self.goal.clone();
 
-		vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
-                .iter()
-                .filter(|&(x, y)| {
-                    pos.0 + x >= 0
-                        && pos.1 + y >= 0
-                        && pos.0 + x < self.size as i32
-                        && pos.1 + y < self.size as i32
-                })
-                .map(|(x, y)| {
-                    let mut swap = current_grid.clone();
-                    swap[pos.0 as usize][pos.1 as usize] =
-                        swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
-                    swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
-                    Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.strategy))
-                })
-                .filter(|swap| !self.close_list.contains(swap))
-                .collect()
-	}
+        vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
+            .iter()
+            .filter(|&(x, y)| {
+                pos.0 + x >= 0
+                    && pos.1 + y >= 0
+                    && pos.0 + x < self.size as i32
+                    && pos.1 + y < self.size as i32
+            })
+            .map(|(x, y)| {
+                let mut swap = current_grid.clone();
+                swap[pos.0 as usize][pos.1 as usize] =
+                    swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
+                swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
+                Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.strategy))
+            })
+            .filter(|swap| !self.close_list.contains(swap))
+            .collect()
+    }
 }
 
 #[cfg(test)]
