@@ -58,18 +58,18 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
 }
 
 pub fn creat_new_rand(size: usize) -> String {
-    let mut newGrid = Vec::new();
+    let mut new_grid = Vec::new();
     let mut rng = rand::thread_rng();
-    newGrid.push(0 as i64);
+    new_grid.push(0 as i64);
     for i in 1..size.pow(2) {
-        newGrid.insert(rng.gen_range(0, i + 1), i as i64);
+        new_grid.insert(rng.gen_range(0, i + 1), i as i64);
     }
-	let mut returnValue = format!("{}\n", size);
-    for i in 0..size {
-        let tempVect: String = newGrid.drain(..size).map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
-		returnValue = format!("{}\n{}",returnValue, tempVect);
+	let mut return_value = format!("{}\n", size);
+    for _i in 0..size {
+        let temp_vect: String = new_grid.drain(..size).map(|x| x.to_string()).collect::<Vec<String>>().join(" ");
+		return_value = format!("{}\n{}",return_value, temp_vect);
     }
-	returnValue
+	return_value
 }
 
 pub fn with_duplicate(map: &Vec<Vec<i64>>) -> bool {

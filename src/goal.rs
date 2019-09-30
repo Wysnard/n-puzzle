@@ -29,7 +29,7 @@ impl Goal {
         let res = match &self {
             Goal::Snail => Self::generate_snail(size, &f),
             Goal::Standard => Self::generate_std(size, &f),
-            Goal::Custom(file) => Self::generate_custom(size, file),
+            Goal::Custom(file) => Self::generate_custom(file),
         };
         let mut tmp = res.clone().into_iter().flatten().collect::<Vec<i64>>();
         tmp.sort();
@@ -48,7 +48,7 @@ impl Goal {
     fn generate_snail(size: i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
         let mut map = map.iter();
 
-        let mut A: Vec<Vec<i64>> = vec![vec![0; size as usize]; size as usize];
+        let mut a: Vec<Vec<i64>> = vec![vec![0; size as usize]; size as usize];
         let n = size;
         let mut len = size;
         let mut k = 0;
@@ -56,30 +56,30 @@ impl Goal {
 
         while k < n * n {
             for i in p..len {
-                A[p as usize][i as usize] = *map.next().unwrap();
+                a[p as usize][i as usize] = *map.next().unwrap();
                 k += 1;
             }
 
             for i in p + 1..len {
-                A[i as usize][(len - 1) as usize] = *map.next().unwrap();
+                a[i as usize][(len - 1) as usize] = *map.next().unwrap();
                 k += 1;
             }
 
             for i in (p..len - 1).rev() {
-                A[(len - 1) as usize][i as usize] = *map.next().unwrap();
+                a[(len - 1) as usize][i as usize] = *map.next().unwrap();
                 k += 1
             }
 
             for i in (p + 1..len - 1).rev() {
-                A[i as usize][p as usize] = *map.next().unwrap();
+                a[i as usize][p as usize] = *map.next().unwrap();
                 k += 1;
             }
 
             p += 1;
             len -= 1;
         }
-        println!("A : {:?}", A);
-        A
+        println!("a : {:?}", a);
+        a
     }
 
     fn generate_std(size: i64, map: &Vec<i64>) -> Vec<Vec<i64>> {
@@ -91,7 +91,7 @@ impl Goal {
         res
     }
 
-    fn generate_custom(size: i64, file: &str) -> Vec<Vec<i64>> {
+    fn generate_custom(file: &str) -> Vec<Vec<i64>> {
         println!("CUSTOM : {}", file);
         if let Ok(m) = fs::read_to_string(file) {
             match parse_file(m) {
