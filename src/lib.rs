@@ -2,6 +2,7 @@ use std::collections::BinaryHeap;
 use std::error::Error;
 use std::process;
 use std::rc::Rc;
+use std::collections::BTreeSet;
 
 pub mod algorithm;
 pub mod file;
@@ -26,9 +27,10 @@ pub struct NPuzzle {
     pub algorithm: Algorithm,
     pub strategy: Strategy,
     pub open_list: BinaryHeap<Rc<Node>>,
-    pub close_list: Vec<Rc<Node>>,
+    pub close_list: BTreeSet<Rc<Node>>,
     pub max_state: usize,
     pub max_iteration: u64,
+    pub debug: bool,
 }
 
 impl NPuzzle {
@@ -39,6 +41,7 @@ impl NPuzzle {
         strategy: String,
         goal: Goal,
         max_iteration: u64,
+        debug: bool,
     ) -> Result<NPuzzle, Box<dyn Error>> {
         let (size, initial) = parse_file(arg)?;
         println!("SIZE : {:?}", size);
@@ -53,16 +56,17 @@ impl NPuzzle {
         strategy.init(&goal);
         println!("Strategy: {:?}", strategy);
         let mut open_list: BinaryHeap<Rc<Node>> = BinaryHeap::new();
-        open_list.push(Rc::new(Node::new(initial, None, &goal, &strategy)));
+        open_list.push(Rc::new(Node::new(initial, None, &goal, &algorithm, &strategy)));
         Ok(NPuzzle {
             size,
             goal: goal.clone(),
             algorithm,
             strategy,
             open_list,
-            close_list: Vec::new(),
+            close_list: BTreeSet::new(),
             max_state: 0,
             max_iteration,
+            debug,
         })
     }
 
@@ -82,16 +86,18 @@ impl NPuzzle {
                 break current;
             }
 
-            // println!("OPEN LIST : {:?}", self.open_list);
-            println!("CURRENT : {:?}", current);
-            // println!("EPOCH: {}", epochs);
+            if self.debug {
+                println!("EPOCH: {}", epochs);
+                println!("CURRENT : {:?}", current);
+                
+            }
 
             let mut swaps: BinaryHeap<Rc<Node>> =
                 self.generate_swaps(find_nb(0, &current.grid), &current);
-            self.close_list.push(current);
+            self.close_list.insert(current);
 
             match self.algorithm {
-                Algorithm::AStar => {
+                Algorithm::AStar | Algorithm::BStar => {
                     self.open_list.extend(swaps);
                     next = self.open_list.pop().unwrap();
                 }
@@ -107,21 +113,23 @@ impl NPuzzle {
             } else {
                 self.max_state
             };
-            // println!("NPUZZLE : {:?}", self);
         };
         // Display of the solved puzzle
         println!("RESOLVED :");
-        fn display(cur: &Option<Rc<Node>>) {
-            if cur.is_some() {
-                let _ = cur.as_ref().map(|node| {
-                    display(&node.parent);
-                    println!("{}", node);
-                });
-            }
+        let g = solved.g;
+        Self::display(&Some(solved));
+        println!("Number of moves: {}", g);
+        println!("Number of iterations : {}", epochs);
+        println!("Complexity Size (Max States): {}", self.max_state);
+    }
+
+    fn display(cur: &Option<Rc<Node>>) {
+        if cur.is_some() {
+            let _ = cur.as_ref().map(|node| {
+                Self::display(&node.parent);
+                println!("{}", node);
+            });
         }
-        display(&Some(solved));
-        println!("EPOCHS : {}", epochs);
-        println!("MAX STATES : {}", self.max_state);
     }
 
     fn generate_swaps(&self, pos: (i32, i32), parent: &Rc<Node>) -> BinaryHeap<Rc<Node>> {
@@ -141,9 +149,9 @@ impl NPuzzle {
                 swap[pos.0 as usize][pos.1 as usize] =
                     swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
                 swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
-                Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.strategy))
+                Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.algorithm, &self.strategy))
             })
-            .filter(|swap| !self.close_list.contains(swap))
+            .filter(|swap| self.open_list.iter().all(|x| x != swap))
             .collect()
     }
 }

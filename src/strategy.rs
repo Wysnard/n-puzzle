@@ -67,7 +67,7 @@ impl Strategy {
             Strategy::Standard(heuristique) => Self::process_std(heuristique, current, goal),
             Strategy::Sandwich(weight, heuristique) => {
                 Self::process_sandwich(weight, heuristique, current, goal)
-            },
+            }
             Strategy::Cross(weight, heuristique) => {
                 Self::process_cross(weight, heuristique, current, goal)
             }
@@ -94,15 +94,19 @@ impl Strategy {
         current: &Vec<Vec<i64>>,
         goal: &Vec<Vec<i64>>,
     ) -> f64 {
-        // TODO: Weight * heuristique
         heuristique
             .process_h(current, &goal)
             .iter()
             .enumerate()
-            .map(|(i, x)| x.iter().enumerate().map(|(j, y)| y * weight[i][j] * weight[i][j]).sum())
+            .map(|(i, x)| {
+                x.iter()
+                    .enumerate()
+                    .map(|(j, y)| y * weight[i][j] * weight[i][j])
+                    .sum()
+            })
             .collect::<Vec<f64>>()
             .iter()
-            .sum() 
+            .sum()
     }
 
     fn process_cross(
@@ -118,6 +122,20 @@ impl Strategy {
             .map(|(i, x)| x.iter().enumerate().map(|(j, y)| y * weight[i][j]).sum())
             .collect::<Vec<f64>>()
             .iter()
-            .sum() 
+            .sum()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_resolve_1() {
+        let initial = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![8, 7, 0]];
+        let goal = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 0]];
+        assert_eq!(
+            2f64,
+            Strategy::Standard(Heuristique::Manhattan).process(initial, goal)
+        );
     }
 }

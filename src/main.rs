@@ -1,13 +1,13 @@
 use npuzzle::algorithm::*;
 use npuzzle::goal::Goal;
 use npuzzle::heuristique::Heuristique;
-use npuzzle::strategy::*;
 use npuzzle::utils::*;
 use npuzzle::NPuzzle;
 use std::env;
 use std::error::Error;
 use std::fs;
 use std::process;
+use std::time::SystemTime;
 
 fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut goal: Goal = Goal::Snail;
@@ -16,15 +16,16 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut strategy: String = "std".to_string();
     let mut input: String = "".to_string();
     let mut max_iteration: u64 = 10_000_000;
+    let mut debug: bool = false;
     let mut args: Vec<String> = env::args().skip(1).rev().collect();
 
     while let Some(arg) = args.pop() {
         match &arg as &str {
+            "--debug" | "-d" => debug = true,
             "--input" | "-i" => {
                 if let Some(a) = args.pop() {
                     if let Ok(a) = a.parse::<usize>() {
-                        /////////////////////////
-                        if a < 10 && a > 0 {
+                        if a < 5 && a > 0 {
                             input = creat_new_rand(a);
                         } else {
                             println!("Map size has to be between 1 and 4 included");
@@ -106,18 +107,36 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
             }
         };
     }
-    let puzzle = NPuzzle::new(input, heuristique, algorithm, strategy, goal, max_iteration)
-        .unwrap_or_else(|err| {
-            eprintln!("Problem with the format of the map : {}", err);
-            process::exit(1);
-        });
+    let puzzle = NPuzzle::new(
+        input,
+        heuristique,
+        algorithm,
+        strategy,
+        goal,
+        max_iteration,
+        debug,
+    )
+    .unwrap_or_else(|err| {
+        eprintln!("Problem with the format of the map : {}", err);
+        process::exit(1);
+    });
     Ok(puzzle)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let now = SystemTime::now();
     match input_manager() {
         Ok(mut puzzle) => puzzle.run(),
         Err(e) => println!("Sorry, You have a mental disease : {}", e),
+    }
+    match now.elapsed() {
+        Ok(elapsed) => {
+            let dur = elapsed.as_millis();
+            println!("Time Complexity : {}.{} seconds", dur / 1000, dur % 1000);
+        }
+        Err(e) => {
+            println!("Error: {:?}", e);
+        }
     }
     Ok(())
 }

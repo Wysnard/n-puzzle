@@ -10,7 +10,6 @@ pub enum Goal {
 
 impl Goal {
     pub fn parse(s: String, file: String) -> Goal {
-        println!("FILE: {}", file);
         match &s.to_lowercase() as &str {
             "snail" => Goal::Snail,
             "standard" | "std" => Goal::Standard,
@@ -35,8 +34,6 @@ impl Goal {
         tmp.sort();
         let zero = tmp.remove(0);
         tmp.push(zero);
-        println!("TMP: {:?}", tmp);
-        println!("F: {:?}", f);
         if tmp == f {
             res
         } else {
@@ -78,7 +75,6 @@ impl Goal {
             p += 1;
             len -= 1;
         }
-        println!("a : {:?}", a);
         a
     }
 

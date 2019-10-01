@@ -21,7 +21,7 @@ impl Heuristique {
         }
     }
 
-    pub fn process_h(&self, grid: &[Vec<i64>], goal: &[Vec<i64>]) -> Vec<Vec<f64>> {
+    pub fn process_h(&self, goal: &[Vec<i64>], grid: &[Vec<i64>]) -> Vec<Vec<f64>> {
         match &self {
             Heuristique::Hamming => Self::process_hamming(grid, goal),
             Heuristique::Manhattan => Self::process_manhattan(grid, goal),
@@ -93,16 +93,5 @@ impl Heuristique {
                     .collect()
             })
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_solvable_1() {
-        let initial = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![8, 7, 0]];
-        let goal = &vec![vec![1, 2, 3], vec![4, 5, 6], vec![7, 8, 0]];
-        // assert_eq!(2f64, Heuristique::process_manhattan(initial, goal));
     }
 }

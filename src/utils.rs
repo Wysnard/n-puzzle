@@ -15,7 +15,7 @@ fn interversion(map: &[Vec<i64>], goal: &[Vec<i64>]) -> usize {
     res
 }
 
-pub fn find_nb(nb: i64, map: &[Vec<i64>]) -> (i32, i32) {
+pub fn find_nb<T: std::cmp::PartialEq>(nb: T, map: &[Vec<T>]) -> (i32, i32) {
     for x in 0..map.len() {
         for y in 0..map.len() {
             if nb == map[x][y] {
@@ -31,7 +31,6 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
         return true;
     }
     let interv = interversion(initial, goal);
-    println!("INTERVERSION: {}", interv);
     let size = goal.len();
     let res = match size % 2 {
         1 => match interv % 2 {
@@ -39,21 +38,11 @@ pub fn solvable(initial: &[Vec<i64>], goal: &[Vec<i64>]) -> bool {
             _ => false,
         },
         0 => {
-            println!("EVEN");
-            println!("INITIAL: {:?}", initial);
-            let (x, y) = find_nb(0, initial);
-            println!("X, Y: {}, {}", x, y);
-            if x % 2 == 0 && interv % 2 == 1 {
-                true
-            } else if x % 2 == 1 && interv % 2 == 0 {
-                true
-            } else {
-                false
-            }
+            let (x, _) = find_nb(0, initial);
+            (x % 2 == 0 && interv % 2 == 1) || (x % 2 == 1 && interv % 2 == 0)
         }
         _ => false,
     };
-    println!("RES: {}", res);
     res
 }
 
