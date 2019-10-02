@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 use std::fmt;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::algorithm::*;
 use super::strategy::*;
 
-type Link = Option<Rc<Node>>;
+type Link = Option<Arc<Node>>;
 
 #[derive(Clone)]
 pub struct Node {
@@ -59,29 +59,24 @@ impl Ord for Node {
         match ord {
             Ordering::Greater => Ordering::Less,
             Ordering::Less => Ordering::Greater,
-            Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
+            Ordering::Equal => match self.f.partial_cmp(&other.f).unwrap() {
+                Ordering::Greater => Ordering::Greater,
+                Ordering::Less => Ordering::Less,
+                Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
+            },
         }
     }
 }
 
 impl PartialEq for Node {
     fn eq(&self, other: &Node) -> bool {
-        self.grid == other.grid && self.g <= other.g
+        self.grid == other.grid && self.f <= other.f && self.g <= other.g
     }
 }
 
 impl PartialOrd for Node {
-    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
-        let ord = self.f.partial_cmp(&other.f);
-
-        match ord {
-            Some(v) => Some(match v {
-                Ordering::Greater => Ordering::Less,
-                Ordering::Less => Ordering::Greater,
-                Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
-            }),
-            _ => None,
-        }
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

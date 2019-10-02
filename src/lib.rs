@@ -1,8 +1,9 @@
+use rayon::prelude::*;
+use std::cmp;
 use std::collections::BinaryHeap;
 use std::error::Error;
 use std::process;
-use std::rc::Rc;
-use std::collections::BTreeSet;
+use std::sync::Arc;
 
 pub mod algorithm;
 pub mod file;
@@ -26,8 +27,8 @@ pub struct NPuzzle {
     pub goal: Vec<Vec<i64>>,
     pub algorithm: Algorithm,
     pub strategy: Strategy,
-    pub open_list: BinaryHeap<Rc<Node>>,
-    pub close_list: BTreeSet<Rc<Node>>,
+    pub open_list: BinaryHeap<Arc<Node>>,
+    pub close_list: Vec<Arc<Node>>,
     pub max_state: usize,
     pub max_iteration: u64,
     pub debug: bool,
@@ -55,15 +56,17 @@ impl NPuzzle {
         let mut strategy = Strategy::parse(strategy, heuristique);
         strategy.init(&goal);
         println!("Strategy: {:?}", strategy);
-        let mut open_list: BinaryHeap<Rc<Node>> = BinaryHeap::new();
-        open_list.push(Rc::new(Node::new(initial, None, &goal, &algorithm, &strategy)));
+        let mut open_list: BinaryHeap<Arc<Node>> = BinaryHeap::new();
+        open_list.push(Arc::new(Node::new(
+            initial, None, &goal, &algorithm, &strategy,
+        )));
         Ok(NPuzzle {
             size,
             goal: goal.clone(),
             algorithm,
             strategy,
             open_list,
-            close_list: BTreeSet::new(),
+            close_list: Vec::new(),
             max_state: 0,
             max_iteration,
             debug,
@@ -89,12 +92,11 @@ impl NPuzzle {
             if self.debug {
                 println!("EPOCH: {}", epochs);
                 println!("CURRENT : {:?}", current);
-                
             }
 
-            let mut swaps: BinaryHeap<Rc<Node>> =
+            let mut swaps: BinaryHeap<Arc<Node>> =
                 self.generate_swaps(find_nb(0, &current.grid), &current);
-            self.close_list.insert(current);
+            self.close_list.push(current);
 
             match self.algorithm {
                 Algorithm::AStar | Algorithm::BStar => {
@@ -107,12 +109,7 @@ impl NPuzzle {
                 }
             };
 
-            let l = self.open_list.len();
-            self.max_state = if l > self.max_state {
-                l
-            } else {
-                self.max_state
-            };
+            self.max_state = cmp::max(self.max_state, self.open_list.len());
         };
         // Display of the solved puzzle
         println!("RESOLVED :");
@@ -123,7 +120,7 @@ impl NPuzzle {
         println!("Complexity Size (Max States): {}", self.max_state);
     }
 
-    fn display(cur: &Option<Rc<Node>>) {
+    fn display(cur: &Option<Arc<Node>>) {
         if cur.is_some() {
             let _ = cur.as_ref().map(|node| {
                 Self::display(&node.parent);
@@ -132,12 +129,12 @@ impl NPuzzle {
         }
     }
 
-    fn generate_swaps(&self, pos: (i32, i32), parent: &Rc<Node>) -> BinaryHeap<Rc<Node>> {
+    fn generate_swaps(&self, pos: (i32, i32), parent: &Arc<Node>) -> BinaryHeap<Arc<Node>> {
         let current_grid = parent.grid.clone();
         let goal = self.goal.clone();
 
         vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
-            .iter()
+            .par_iter()
             .filter(|&(x, y)| {
                 pos.0 + x >= 0
                     && pos.1 + y >= 0
@@ -149,9 +146,20 @@ impl NPuzzle {
                 swap[pos.0 as usize][pos.1 as usize] =
                     swap[(pos.0 + x) as usize][(pos.1 + y) as usize];
                 swap[(pos.0 + x) as usize][(pos.1 + y) as usize] = 0;
-                Rc::new(Node::new(swap, Some(parent.clone()), &goal, &self.algorithm, &self.strategy))
+                Arc::new(Node::new(
+                    swap,
+                    Some(parent.clone()),
+                    &goal,
+                    &self.algorithm,
+                    &self.strategy,
+                ))
             })
-            .filter(|swap| self.open_list.iter().all(|x| x != swap))
+            .filter(|swap| {
+                !self
+                    .close_list
+                    .par_iter()
+                    .any(|x: &Arc<Node>| x.grid == swap.grid && x.f <= swap.f && x.g <= swap.g)
+            })
             .collect()
     }
 }
