@@ -28,7 +28,7 @@ pub struct NPuzzle {
     pub algorithm: Algorithm,
     pub strategy: Strategy,
     pub open_list: BinaryHeap<Arc<Node>>,
-    pub close_list: Vec<Arc<Node>>,
+    pub close_list: BinaryHeap<Arc<Node>>,
     pub max_state: usize,
     pub max_iteration: u64,
     pub debug: bool,
@@ -66,7 +66,7 @@ impl NPuzzle {
             algorithm,
             strategy,
             open_list,
-            close_list: Vec::new(),
+            close_list: BinaryHeap::new(),
             max_state: 0,
             max_iteration,
             debug,
@@ -158,7 +158,7 @@ impl NPuzzle {
                 !self
                     .close_list
                     .par_iter()
-                    .any(|x: &Arc<Node>| x.grid == swap.grid && x.f <= swap.f && x.g <= swap.g)
+                    .any(|x: &Arc<Node>| x.grid == swap.grid && x.f <= swap.f)
             })
             .collect()
     }
