@@ -1,5 +1,4 @@
 use super::utils::*;
-use rayon::prelude::*;
 use std::process;
 
 #[derive(Debug, Clone)]

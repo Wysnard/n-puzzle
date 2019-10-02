@@ -25,10 +25,10 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
             "--input" | "-i" => {
                 if let Some(a) = args.pop() {
                     if let Ok(a) = a.parse::<usize>() {
-                        if a < 5 && a > 0 {
+                        if a < 6 && a > 0 {
                             input = creat_new_rand(a);
                         } else {
-                            println!("Map size has to be between 1 and 4 included");
+                            println!("Map size has to be between 1 and 5 included");
                             process::exit(0);
                         }
                     } else {

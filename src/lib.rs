@@ -85,7 +85,7 @@ impl NPuzzle {
             epochs += 1;
             let current = next;
 
-            if current.h == 0.0 {
+            if current.grid == self.goal {
                 break current;
             }
 
@@ -97,6 +97,12 @@ impl NPuzzle {
             let mut swaps: BinaryHeap<Arc<Node>> =
                 self.generate_swaps(find_nb(0, &current.grid), &current);
             self.close_list.push(current);
+            self.open_list = self
+                .open_list
+                .iter()
+                .cloned()
+                .filter(|x| !swaps.iter().any(|y| y == x))
+                .collect();
 
             match self.algorithm {
                 Algorithm::AStar | Algorithm::BStar => {
