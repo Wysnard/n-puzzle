@@ -82,7 +82,7 @@ impl Heuristique {
                                 != 1f64
                                 && goal[a as usize][b as usize] != 0
                             {
-                                1f64 + tmp_vec[i][j]
+                                2f64 + tmp_vec[i][j]
                             } else {
                                 0f64 + tmp_vec[i][j]
                             }

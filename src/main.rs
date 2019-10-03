@@ -18,6 +18,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
     let mut max_iteration: u64 = 10_000_000;
     let mut debug: bool = false;
     let mut args: Vec<String> = env::args().skip(1).rev().collect();
+    let mut thread: usize = 1;
 
     while let Some(arg) = args.pop() {
         match &arg as &str {
@@ -101,6 +102,24 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
                     }
                 };
             }
+            "--thread" | "--thrd" | "--th" | "-t" => {
+                if let Some(a) = args.pop() {
+                    if let Ok(a) = a.parse::<usize>() {
+                        if a > 0 && a < 5 {
+                            thread = a
+                        } else {
+                            println!("Put between 1 and 4 threads");
+                            process::exit(1);
+                        }
+                    } else {
+                        println!("Wrong number of thread");
+                        process::exit(1);
+                    }
+                } else {
+                    println!("Give the number of thread you want");
+                    process::exit(1);
+                }
+            }
             _ => {
                 println!("Argument not recognized");
                 process::exit(1);
@@ -115,6 +134,7 @@ fn input_manager() -> Result<NPuzzle, Box<dyn Error>> {
         goal,
         max_iteration,
         debug,
+        2usize,
     )
     .unwrap_or_else(|err| {
         eprintln!("Problem with the format of the map : {}", err);

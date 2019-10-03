@@ -59,11 +59,7 @@ impl Ord for Node {
         match ord {
             Ordering::Greater => Ordering::Less,
             Ordering::Less => Ordering::Greater,
-            Ordering::Equal => match self.f.partial_cmp(&other.f).unwrap() {
-                Ordering::Greater => Ordering::Greater,
-                Ordering::Less => Ordering::Less,
-                Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
-            },
+            Ordering::Equal => self.g.partial_cmp(&other.g).unwrap(),
         }
     }
 }

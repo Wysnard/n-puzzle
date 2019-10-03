@@ -32,6 +32,7 @@ pub struct NPuzzle {
     pub max_state: usize,
     pub max_iteration: u64,
     pub debug: bool,
+    pub thread: usize,
 }
 
 impl NPuzzle {
@@ -43,6 +44,7 @@ impl NPuzzle {
         goal: Goal,
         max_iteration: u64,
         debug: bool,
+        thread: usize,
     ) -> Result<NPuzzle, Box<dyn Error>> {
         let (size, initial) = parse_file(arg)?;
         println!("SIZE : {:?}", size);
@@ -70,6 +72,7 @@ impl NPuzzle {
             max_state: 0,
             max_iteration,
             debug,
+            thread,
         })
     }
 
@@ -79,24 +82,37 @@ impl NPuzzle {
     pub fn run(&mut self) {
         println!("RUN !");
         let mut epochs: u64 = 0;
-        let mut next = self.open_list.pop().unwrap();
+        let mut next: Vec<Arc<Node>> = vec![self.open_list.pop().unwrap()];
+        let zero = Arc::new(Node {
+            grid: vec![],
+            f: 100_000f64,
+            h: 100_000f64,
+            g: 100_000f64,
+            parent: None,
+        });
 
         let solved = loop {
             epochs += 1;
-            let current = next;
+            let currents = next;
 
-            if current.grid == self.goal {
-                break current;
+            if currents.iter().any(|x| x.grid == self.goal) {
+                break currents
+                    .iter()
+                    .fold(zero, |a, b| std::cmp::max(a, b.clone()));
             }
 
             if self.debug {
                 println!("EPOCH: {}", epochs);
-                println!("CURRENT : {:?}", current);
+                println!("CURRENTS : {:?}", currents);
             }
 
-            let mut swaps: BinaryHeap<Arc<Node>> =
-                self.generate_swaps(find_nb(0, &current.grid), &current);
-            self.close_list.push(current);
+            let mut swaps: BinaryHeap<Arc<Node>> = currents
+                .par_iter()
+                .map(|current| self.generate_swaps(find_nb(0, &current.grid), current))
+                .flatten()
+                .collect();
+
+            self.close_list.extend(currents);
             self.open_list = self
                 .open_list
                 .iter()
@@ -104,14 +120,21 @@ impl NPuzzle {
                 .filter(|x| !swaps.iter().any(|y| y == x))
                 .collect();
 
-            match self.algorithm {
+            let it: _ = (0..self.thread).into_iter();
+            next = match self.algorithm {
                 Algorithm::AStar | Algorithm::BStar => {
                     self.open_list.extend(swaps);
-                    next = self.open_list.pop().unwrap();
+                    it.map(|_| self.open_list.pop())
+                        .filter_map(Option::Some)
+                        .map(|x| x.unwrap())
+                        .collect()
                 }
                 Algorithm::Greedy => {
-                    next = swaps.pop().unwrap_or_else(|| self.open_list.pop().unwrap());
+                    let res: _ = it
+                        .map(|_| swaps.pop().unwrap_or_else(|| self.open_list.pop().unwrap()))
+                        .collect();
                     self.open_list.extend(swaps);
+                    res
                 }
             };
 
@@ -135,11 +158,11 @@ impl NPuzzle {
         }
     }
 
-    fn generate_swaps(&self, pos: (i32, i32), parent: &Arc<Node>) -> BinaryHeap<Arc<Node>> {
+    fn generate_swaps(&self, pos: (i32, i32), parent: &Arc<Node>) -> Vec<Arc<Node>> {
         let current_grid = parent.grid.clone();
         let goal = self.goal.clone();
 
-        vec![(-1, 0), (0, 1), (1, 0), (0, -1)]
+        [(-1, 0), (0, 1), (1, 0), (0, -1)]
             .par_iter()
             .filter(|&(x, y)| {
                 pos.0 + x >= 0
@@ -163,7 +186,7 @@ impl NPuzzle {
             .filter(|swap| {
                 !self
                     .close_list
-                    .par_iter()
+                    .iter()
                     .any(|x: &Arc<Node>| x.grid == swap.grid && x.f <= swap.f)
             })
             .collect()
